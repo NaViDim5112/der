@@ -22,7 +22,7 @@ $others = array_filter(wiki_categories(), function ($c) use ($cat) {
 $actions = '';
 if ($isAdmin) {
     $actions = '<a class="btn btn-ghost btn-sm" href="' . e(url('/admin/wiki.php', ['category' => (int)$cat['id']])) . '">' . icon('edit') . ' Редактировать категорию</a>'
-        . '<a class="btn btn-accent btn-sm" href="' . e(url('/admin/wiki.php', ['category' => (int)$cat['id'], 'new' => 1])) . '">' . icon('plus') . ' Добавить статью</a>';
+        . '<a class="btn btn-accent btn-sm" href="' . e(url('/admin/wiki.php', ['new_article' => 1, 'cat' => (int)$cat['id']])) . '">' . icon('plus') . ' Добавить статью</a>';
 }
 
 forum_header([
@@ -68,7 +68,7 @@ forum_header([
 <div class="card empty wiki-empty">
   <?= icon('book') ?>
   <div>В этом разделе пока нет статей.</div>
-  <?php if ($isAdmin): ?><a class="btn btn-white btn-pill" href="<?= e(url('/admin/wiki.php', ['category' => (int)$cat['id'], 'new' => 1])) ?>"><?= icon('plus') ?> Добавить статью</a><?php endif; ?>
+  <?php if ($isAdmin): ?><a class="btn btn-white btn-pill" href="<?= e(url('/admin/wiki.php', ['new_article' => 1, 'cat' => (int)$cat['id']])) ?>"><?= icon('plus') ?> Добавить статью</a><?php endif; ?>
 </div>
 <?php endif; ?>
 

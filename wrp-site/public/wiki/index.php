@@ -94,7 +94,7 @@ forum_header([
   <div class="card empty wiki-empty">
     <?= icon('book') ?>
     <div>База знаний пока пуста.</div>
-    <?php if (can_admin()): ?><a class="btn btn-white btn-pill" href="<?= e(url('/admin/wiki.php')) ?>"><?= icon('plus') ?> Добавить раздел</a><?php endif; ?>
+    <?php if (can_admin()): ?><a class="btn btn-white btn-pill" href="<?= e(url('/admin/wiki.php', ['new_category' => 1])) ?>"><?= icon('plus') ?> Добавить раздел</a><?php endif; ?>
   </div>
   <?php endif; ?>
 </section>
