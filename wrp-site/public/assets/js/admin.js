@@ -123,6 +123,19 @@
   $$('[data-autosubmit]').forEach(function (el) {
     el.addEventListener('change', function () { if (el.form) el.form.submit(); });
   });
+  // Быстрый выбор срока бана: +N дней от текущего времени
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-ban-days]');
+    if (!b) return;
+    var input = b.form ? b.form.querySelector('[name="ban_until"]') : null;
+    if (!input) return;
+    var d = new Date(Date.now() + parseInt(b.getAttribute('data-ban-days'), 10) * 86400000);
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    input.value = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    var forever = b.form.querySelector('[name="ban_forever"]');
+    if (forever && forever.checked) { forever.checked = false; forever.dispatchEvent(new Event('change')); }
+  });
+
   // ---------- Конструктор анкеты (разделы форума) ----------
   (function () {
     var fb = $('[data-form-builder]');

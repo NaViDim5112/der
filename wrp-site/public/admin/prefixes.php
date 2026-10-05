@@ -166,8 +166,8 @@ admin_header('Префиксы', 'prefixes');
           <td class="hide-md">
             <?php if (empty($where[$pid])): ?><span class="muted small">нигде</span><?php else: ?>
             <div class="tags">
-              <?php foreach (array_slice($where[$pid], 0, 6) as $n): ?><a class="tag" href="<?= e(url('/admin/nodes.php', ['edit' => $n['id']])) ?>"><?= e($n['title']) ?></a><?php endforeach; ?>
-              <?php if (count($where[$pid]) > 6): ?><span class="tag">+<?= count($where[$pid]) - 6 ?></span><?php endif; ?>
+              <?php foreach (array_slice($where[$pid], 0, 3) as $n): ?><a class="tag" href="<?= e(url('/admin/nodes.php', ['edit' => $n['id']])) ?>"><?= e($n['title']) ?></a><?php endforeach; ?>
+              <?php if (count($where[$pid]) > 3): ?><span class="tag" title="<?= e(implode(', ', array_column(array_slice($where[$pid], 3), 'title'))) ?>">ещё <?= count($where[$pid]) - 3 ?></span><?php endif; ?>
             </div>
             <?php endif; ?>
           </td>

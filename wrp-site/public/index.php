@@ -1,4 +1,9 @@
 <?php
+// До установки ведём на установщик относительной ссылкой (так работает и в подпапке)
+if (!is_file(__DIR__ . '/../config/config.php')) {
+    header('Location: install/');
+    exit;
+}
 require __DIR__ . '/../app/bootstrap.php';
 
 $siteName = (string)setting('site_name');
@@ -11,14 +16,16 @@ $socials = social_links();
 $stats = forum_stats();
 $months = ru_months_short();
 
+// Только то, что уже работает на сервере (без обещаний)
 $features = [
-    ['briefcase', 'Работы и карьера', 'Начни с простых подработок и дорасти до собственного дела. Таксист, дальнобойщик, механик или инкассатор - каждая профессия прокачивается и с опытом приносит больше.'],
-    ['shield', 'Организации', 'Служи в полиции или армии, спасай жизни в больнице, веди эфиры в радиоцентре или управляй городом из мэрии. Путь от стажёра до лидера - в твоих руках.'],
-    ['building', 'Дома и бизнесы', 'Покупай дома и квартиры, обставляй интерьеры по вкусу, открывай заправки, магазины и закусочные. Имущество приносит доход и уважение в городе.'],
-    ['car', 'Транспорт и тюнинг', 'От скромного седана до спорткара мечты. Тюнинг, покраска и номера, ночные заезды по улицам Los Santos и честные гонки на трассе.'],
-    ['users', 'Семьи и банды', 'Собери семью из друзей или вступи в уличную банду. Делите районы, ведите войны за территории и пишите собственную историю города.'],
-    ['star', 'Мероприятия', 'Регулярные ивенты от администрации: гонки, прятки, битвы за призы, праздничные квесты и конкурсы. Скучно в Los Santos не бывает.'],
+    ['home', 'Дома и особняки', 'Более 1300 домов - от небольших квартир до особняков класса S. Мебель, сейф, склад и подвал, комнаты в аренду и аукцион домов.'],
+    ['car', 'Автосалон WORLD MOTORS', 'Салон в Вайнвуде: машины на витрине, бесплатный тест-драйв и покупка. До трёх личных машин, эвакуатор и продажа другим игрокам.'],
+    ['building', 'World Bank', 'Личный счёт у каждого персонажа. Банкоматы у мэрии, Департамента полиции и в аэропорту, переводы по нику и зарплата на счёт в PayDay.'],
+    ['shield', 'Организации', 'Правительство - 12 рангов, Департамент полиции - 14 рангов. Зарплата растёт вместе с рангом, на службе - служебный транспорт.'],
+    ['map', 'Прилёт в Лос-Сантос', 'Новые игроки прилетают в аэропорт LSIA, выбирают внешность и получают первые подсказки в Центре адаптации.'],
+    ['monitor', 'Свой лаунчер и интерфейс', 'Лаунчер ставит всё в один клик и сам проверяет файлы. В игре - собственные окна интерфейса и спидометр World RP.'],
 ];
+$launcher = trim((string)setting('launcher_url'));
 
 site_header(['active' => 'home', 'body_class' => 'page-home']);
 ?>
@@ -92,7 +99,7 @@ site_header(['active' => 'home', 'body_class' => 'page-home']);
       </div>
     </div>
     <div class="server-cell server-connect">
-      <a class="site-btn site-btn-accent" href="<?= e(site_samp_url()) ?>"><?= icon('gamepad') ?> Подключиться</a>
+      <a class="site-btn site-btn-accent" href="<?= e(url('/start.php')) ?>"><?= icon('gamepad') ?> Играть</a>
     </div>
   </section>
 </div>
@@ -103,7 +110,7 @@ site_header(['active' => 'home', 'body_class' => 'page-home']);
     <div class="section-head reveal">
       <span class="eyebrow">Возможности</span>
       <h2 class="section-title">Почему <span class="grad-text"><?= e($siteName) ?></span></h2>
-      <p class="section-lead">Живой город, где каждый игрок - часть общей истории. Выбирай свой путь: закон или улица, бизнес или служба, тихая жизнь или громкая слава.</p>
+      <p class="section-lead">Живой город, где каждый игрок - часть общей истории. Всё, что описано ниже, уже работает на сервере, а город растёт с каждым обновлением.</p>
     </div>
     <div class="features">
       <?php foreach ($features as $i => $f): ?>
@@ -124,23 +131,23 @@ site_header(['active' => 'home', 'body_class' => 'page-home']);
     <div class="section-head reveal">
       <span class="eyebrow">Три шага</span>
       <h2 class="section-title">Как начать играть</h2>
-      <p class="section-lead">Понадобится около пятнадцати минут. Если что-то не получится - подробная инструкция и ответы на частые вопросы уже ждут.</p>
+      <p class="section-lead">Играть можно через собственный лаунчер World RP: он установит всё нужное и подключит к серверу. Подробная инструкция и ответы на частые вопросы - на странице «Начать игру».</p>
     </div>
     <div class="steps">
       <article class="step reveal">
         <div class="step-head"><span class="step-num">01</span><span class="step-icon"><?= icon('monitor') ?></span></div>
-        <h3>Установи GTA San Andreas</h3>
-        <p>Нужна версия игры 1.0 (US). Если у тебя другая версия, её легко понизить даунгрейдером - мы подскажем как.</p>
+        <h3>Подготовь GTA San Andreas</h3>
+        <p>Нужна GTA San Andreas версии 1.0 (US) на компьютере с Windows. Файлы самой игры лаунчер не распространяет.</p>
       </article>
       <article class="step reveal" style="--d:90ms">
         <div class="step-head"><span class="step-num">02</span><span class="step-icon"><?= icon('download') ?></span></div>
-        <h3>Установи клиент SA-MP или open.mp</h3>
-        <p>Скачай клиент SA-MP 0.3.7 или лаунчер open.mp - оба подходят для нашего сервера. Установка занимает пару минут.</p>
+        <h3>Скачай лаунчер World RP<?php if ($launcher === ''): ?> <span class="soon-tag">Скоро</span><?php endif; ?></h3>
+        <p>Он сам поставит клиент, интерфейс World RP и файлы сервера, проверит их и будет обновлять. Руками ничего ставить не нужно.</p>
       </article>
       <article class="step reveal" style="--d:180ms">
-        <div class="step-head"><span class="step-num">03</span><span class="step-icon"><?= icon('wifi') ?></span></div>
-        <h3>Подключись к серверу</h3>
-        <p>Добавь адрес <code><?= e($srv['address']) ?></code> в избранное, укажи ник в формате Имя_Фамилия и заходи в игру.</p>
+        <div class="step-head"><span class="step-num">03</span><span class="step-icon"><?= icon('gamepad') ?></span></div>
+        <h3>Создай аккаунт и играй</h3>
+        <p>Зарегистрируйся прямо в лаунчере, ник - в формате <code>Имя_Фамилия</code>. Нажми «Играть», и ты в аэропорту Лос-Сантоса.</p>
       </article>
     </div>
     <div class="section-cta reveal">
@@ -190,7 +197,7 @@ site_header(['active' => 'home', 'body_class' => 'page-home']);
       <div>
         <span class="eyebrow">Сообщество</span>
         <h2 class="section-title">Присоединяйся к жителям Los Santos</h2>
-        <p class="section-lead">На форуме - новости, жалобы, заявления в организации и тысячи историй игроков. В соцсетях - анонсы мероприятий и живое общение.</p>
+        <p class="section-lead">На форуме - новости сервера, жалобы, заявления в организации и общение игроков. В соцсетях - анонсы обновлений и живое общение.</p>
         <div class="community-actions">
           <a class="site-btn site-btn-white site-btn-pill" href="<?= e(url('/forum/')) ?>"><?= icon('chats') ?> Перейти на форум</a>
           <?php foreach ($socials as $s): ?>

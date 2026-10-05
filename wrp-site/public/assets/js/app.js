@@ -369,16 +369,33 @@
       }
     });
 
-    // Черновик в браузере, чтобы не терять текст
+    // Черновик в браузере, чтобы не терять текст.
+    // Восстанавливается и поверх шаблона темы; удаляется только после успешной отправки
+    // (если после отправки на странице есть ошибка - черновик остаётся).
     var key = ta.getAttribute('data-draft');
     if (key) {
       try {
-        if (!ta.value && localStorage.getItem('draft:' + key)) ta.value = localStorage.getItem('draft:' + key);
-        ta.addEventListener('input', function () { localStorage.setItem('draft:' + key, ta.value); });
-        if (ta.form) ta.form.addEventListener('submit', function () { localStorage.removeItem('draft:' + key); });
+        var saved = localStorage.getItem('draft:' + key);
+        if (saved && saved !== ta.value && (ta.value === '' || ta.value === ta.defaultValue) && !document.querySelector('.flash-error, .field-error')) {
+          ta.value = saved;
+        }
+        ta.addEventListener('input', function () {
+          if (ta.value === '' || ta.value === ta.defaultValue) localStorage.removeItem('draft:' + key);
+          else localStorage.setItem('draft:' + key, ta.value);
+        });
+        if (ta.form) ta.form.addEventListener('submit', function () { sessionStorage.setItem('draft-sent', key); });
       } catch (e) {}
     }
   }
+
+  // Черновик отправленной формы: ошибки нет - удаляем, есть - оставляем
+  try {
+    var sent = sessionStorage.getItem('draft-sent');
+    if (sent) {
+      sessionStorage.removeItem('draft-sent');
+      if (!document.querySelector('.flash-error, .field-error')) localStorage.removeItem('draft:' + sent);
+    }
+  } catch (e) {}
 
   WRP.initEditor = initEditor;
   document.querySelectorAll('textarea[data-editor]').forEach(initEditor);

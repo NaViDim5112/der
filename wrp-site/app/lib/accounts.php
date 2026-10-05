@@ -426,6 +426,11 @@ function acc_lcfirst($s)
     return mb_strtolower(mb_substr((string)$s, 0, 1)) . mb_substr((string)$s, 1);
 }
 
+function acc_ucfirst($s)
+{
+    return mb_strtoupper(mb_substr((string)$s, 0, 1)) . mb_substr((string)$s, 1);
+}
+
 // "В сети" или "Был(а) сегодня в 12:30"
 function acc_seen_text($u)
 {

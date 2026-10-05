@@ -3,7 +3,8 @@
 .admin-page .container { max-width: 1280px; }
 
 .adm { display: grid; grid-template-columns: 236px minmax(0, 1fr); gap: 18px; align-items: start; }
-.adm-main { min-width: 0; display: grid; gap: 16px; align-content: start; }
+.adm-main { min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-content: start; }
+.adm-main > *, .adm-cols > *, .adm-form > * { min-width: 0; }
 .adm-main > .card + .card { margin-top: 0; }
 .adm-main > .flash { margin-bottom: 0; }
 .adm [hidden] { display: none !important; }
@@ -77,6 +78,7 @@ a.adm-tile:hover { border-color: color-mix(in srgb, var(--tc, var(--accent)) 55%
 .adm-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .adm-cols > .card + .card { margin-top: 0; }
 .adm-cols-wide { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+.adm-cols-side { grid-template-columns: minmax(0, 1fr) 300px; }
 
 /* ---------- Списки на обзоре ---------- */
 
@@ -131,7 +133,7 @@ a.adm-tile:hover { border-color: color-mix(in srgb, var(--tc, var(--accent)) 55%
 
 /* ---------- Формы ---------- */
 
-.adm-form { display: grid; gap: 16px; }
+.adm-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .adm .form-row { align-content: start; }
 .adm-form .card { display: grid; gap: 14px; }
 .adm-form .card > .adm-card-head { margin-bottom: 0; }
@@ -235,6 +237,7 @@ a.adm-tile:hover { border-color: color-mix(in srgb, var(--tc, var(--accent)) 55%
 .adm-cell-main { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .adm-cell-text { min-width: 0; }
 .adm-cell-title { font-weight: 800; }
+.adm .table td.url-cell { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .adm-cell-sub { font-size: 12px; color: var(--muted); }
 .table tr.is-muted td { opacity: .6; }
 
@@ -329,7 +332,7 @@ a.adm-tile:hover { border-color: color-mix(in srgb, var(--tc, var(--accent)) 55%
 /* ---------- Адаптив ---------- */
 
 @media (max-width: 1150px) {
-  .adm-cols, .adm-cols-wide { grid-template-columns: minmax(0, 1fr); }
+  .adm-cols, .adm-cols-wide, .adm-cols-side { grid-template-columns: minmax(0, 1fr); }
   .adm-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .adm-filters .form-row:first-child { grid-column: 1 / -1; }
 }
@@ -367,4 +370,33 @@ a.adm-tile:hover { border-color: color-mix(in srgb, var(--tc, var(--accent)) 55%
   .adm-tile-icon { width: 36px; height: 36px; }
   .adm-tile b { font-size: 19px; }
   .adm-savebar .hint { display: none; }
+}
+
+/* Мелочи таблиц */
+.adm .table .group-badge { white-space: nowrap; }
+.adm .table tr.is-banned .adm-user-name { text-decoration: line-through; text-decoration-color: rgba(239, 68, 68, .6); }
+.adm .table td > .tag { white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .adm-tree th.tree-col { width: auto; }
+  .adm-tree .adm-levels { display: none; }
+  .adm-tree .tags .tag:not(:first-child) { display: none; }
+  .adm-tree td.tree-name { min-width: 170px; }
+}
+
+@media (max-width: 520px) {
+  .adm-savebar { position: static; box-shadow: none; }
+  .adm-tree td.tree-name { min-width: 130px; }
+  .adm .input-order { width: 52px; }
+}
+
+@media (max-width: 520px) {
+  .adm .card { padding: 12px; }
+  .adm .table th, .adm .table td { padding: 8px 5px; }
+  .adm .table td.actions .btn-sm { padding: 0 8px; }
+  .adm-cell-main { gap: 7px; }
+  .adm .table .avatar-s { width: 26px; height: 26px; font-size: 12px; }
+}
+@media (max-width: 520px) {
+  .adm .table .group-badge { white-space: normal; }
 }

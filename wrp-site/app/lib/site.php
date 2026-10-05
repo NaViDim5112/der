@@ -146,7 +146,7 @@ function site_plain($body, $limit = 0)
     $t = str_replace(['[*]', "\r"], ["\n", ''], $t);
     $out = '';
     foreach (preg_split('~\n+~', $t) as $line) {
-        $line = bbcode_plain($line);
+        $line = preg_replace('~\s+([.,!?:;)])~u', '$1', bbcode_plain($line));
         if ($line === '') {
             continue;
         }
@@ -324,7 +324,7 @@ function site_footer()
         <button class="site-address" type="button" data-copy="<?= e($srv['address']) ?>" title="Скопировать адрес">
           <span><?= e($srv['address']) ?></span><?= icon('copy') ?>
         </button>
-        <a class="site-footer-connect" href="<?= e(site_samp_url()) ?>"><?= icon('gamepad') ?> Подключиться</a>
+        <a class="site-footer-connect" href="<?= e(url('/start.php')) ?>"><?= icon('gamepad') ?> Как начать играть</a>
       </div>
     </div>
     <div class="site-footer-bottom">

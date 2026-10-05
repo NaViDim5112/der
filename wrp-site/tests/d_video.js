@@ -1,0 +1,40 @@
+// Окно с видео на главной: кнопка «Видео об игре», открытие, Esc, закрытие по кнопке.
+// BASE=http://127.0.0.1:8084 NODE_PATH=... node tests/d_video.js out_dir
+const { chromium } = require('playwright');
+const base = process.env.BASE || 'http://127.0.0.1:8084';
+const out = process.argv[2] || '.';
+const ok = (c, m) => { console.log((c ? 'OK   ' : 'FAIL ') + m); if (!c) process.exitCode = 1; };
+(async () => {
+  const b = await chromium.launch();
+  const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+  const errors = [];
+  p.on('pageerror', e => errors.push(e.message));
+  await p.goto(base + '/');
+  await p.waitForTimeout(1200);
+  const btn = p.locator('[data-video]');
+  ok(await btn.count() === 1, 'кнопка «Видео об игре» есть');
+  ok((await btn.getAttribute('data-video')) === 'dQw4w9WgXcQ', 'id ролика разобран из ссылки');
+  await p.screenshot({ path: out + '/d-home-video-btn.png' });
+  await btn.click();
+  await p.waitForTimeout(500);
+  const src = await p.getAttribute('.video-modal iframe', 'src');
+  ok(/youtube-nocookie\.com\/embed\/dQw4w9WgXcQ\?autoplay=1/.test(src || ''), 'iframe открыт: ' + src);
+  ok(await p.evaluate(() => document.activeElement && document.activeElement.classList.contains('video-close')), 'фокус на кнопке закрытия');
+  await p.screenshot({ path: out + '/d-home-video-modal.png' });
+  await p.keyboard.press('Escape');
+  await p.waitForTimeout(400);
+  ok(!(await p.locator('.video-modal.is-open').count()), 'Esc закрывает окно');
+  ok((await p.locator('.video-modal iframe').count()) === 0, 'видео остановлено (iframe убран)');
+  await btn.click();
+  await p.waitForTimeout(400);
+  await p.click('.video-close');
+  await p.waitForTimeout(400);
+  ok(!(await p.locator('.video-modal.is-open').count()), 'кнопка закрывает окно');
+  await btn.click();
+  await p.waitForTimeout(400);
+  await p.mouse.click(10, 450);
+  await p.waitForTimeout(400);
+  ok(!(await p.locator('.video-modal.is-open').count()), 'клик по фону закрывает окно');
+  ok(errors.length === 0, 'нет ошибок JS ' + JSON.stringify(errors));
+  await b.close();
+})();

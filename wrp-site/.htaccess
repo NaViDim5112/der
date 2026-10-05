@@ -1,0 +1,30 @@
+# World Role Play: запасной вариант, если домен смотрит в корень проекта, а не в папку public/.
+# Лучше направить домен сразу в public/ (в OpenServer 6 это делает файл .osp/project.ini).
+
+Options -Indexes
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Если сайт лежит в подпапке и ссылки не открываются, раскомментируйте и укажите путь:
+  # RewriteBase /wrp/
+
+  # Служебные папки и скрытые файлы закрыты
+  RewriteRule ^(app|config|sql|storage|tests|\.git|\.osp)(/|$) - [F,L]
+  RewriteRule (^|/)\.(?!well-known(/|$)) - [F,L]
+
+  # Всё остальное отдаётся из public/: /forum/ -> /public/forum/
+  RewriteRule ^public(/|$) - [L]
+  RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Без mod_rewrite закрываем хотя бы служебные файлы (README.md, *.sql, логи)
+<FilesMatch "(?i)(^\.|\.(md|sql|log|lock)$)">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>

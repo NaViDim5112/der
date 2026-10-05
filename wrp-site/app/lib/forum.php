@@ -265,7 +265,7 @@ function user_rebuild_counts($userId)
     db_exec('UPDATE users SET
         posts_count = (SELECT COUNT(*) FROM posts p JOIN threads t ON t.id = p.thread_id WHERE p.user_id = :a AND p.is_deleted = 0 AND t.is_deleted = 0),
         threads_count = (SELECT COUNT(*) FROM threads WHERE user_id = :b AND is_deleted = 0),
-        likes_received = (SELECT COUNT(*) FROM post_likes l JOIN posts p ON p.id = l.post_id WHERE p.user_id = :c)
+        likes_received = (SELECT COUNT(*) FROM post_likes l JOIN posts p ON p.id = l.post_id JOIN threads t ON t.id = p.thread_id WHERE p.user_id = :c AND p.is_deleted = 0 AND t.is_deleted = 0)
         WHERE id = :id', ['a' => $userId, 'b' => $userId, 'c' => $userId, 'id' => $userId]);
 }
 
@@ -546,7 +546,7 @@ function alert_text($a)
         case 'prefix':
             return 'Статус темы ' . $title . ' изменён: <b>' . e($a['extra']) . '</b>';
         case 'move':
-            return 'Ваша тема ' . $title . ' перенесена';
+            return 'Ваша тема ' . $title . ' перенесена' . (!empty($a['extra']) ? ' в «' . e($a['extra']) . '»' : '');
         case 'conversation':
             return $actor . ' написал(а) вам личное сообщение';
         case 'profile_post':

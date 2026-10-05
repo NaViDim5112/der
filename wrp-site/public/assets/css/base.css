@@ -291,6 +291,8 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 16px 0; }
 .avatar-xxl { width: 128px; height: 128px; font-size: 54px; }
 
 .username { font-weight: 700; }
+/* в светлой теме светлые цвета групп темнее, чтобы ник читался */
+:root[data-theme="light"] .username, :root[data-theme="light"] .group-badge { filter: brightness(.62) saturate(1.25); }
 .username:hover { text-decoration: underline; }
 
 .group-badge {

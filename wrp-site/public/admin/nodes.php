@@ -645,7 +645,7 @@ admin_header('Разделы форума', 'nodes');
     <input type="hidden" name="action" value="order">
     <div class="table-wrap">
       <table class="table adm-tree">
-        <thead><tr><th class="tree-col">Раздел</th><th class="num hide-md" title="Темы / сообщения">Темы / сообщ.</th><th class="center">Порядок</th><th></th></tr></thead>
+        <thead><tr><th class="tree-col">Раздел</th><th class="num hide-md" title="Темы / сообщения">Темы / сообщ.</th><th class="center hide-sm">Порядок</th><th></th></tr></thead>
         <tbody>
         <?php foreach ($tree as $row): $n = $row['node']; $nid = (int)$n['id']; $hasKids = (bool)node_children_ids($nid); $isCat = $n['type'] === 'category'; ?>
           <tr id="node-<?= $nid ?>" class="<?= $isCat ? 'is-cat' : '' ?>">
@@ -676,12 +676,12 @@ admin_header('Разделы форума', 'nodes');
               </div>
             </td>
             <td class="num hide-md"><?= $n['type'] === 'forum' ? num($n['thread_count']) . ' <span class="muted">/ ' . num($n['post_count']) . '</span>' : '<span class="muted">-</span>' ?></td>
-            <td class="center"><input class="input input-order" type="number" name="order[<?= $nid ?>]" value="<?= (int)$n['display_order'] ?>" aria-label="Порядок «<?= e($n['title']) ?>»"></td>
+            <td class="center hide-sm"><input class="input input-order" type="number" name="order[<?= $nid ?>]" value="<?= (int)$n['display_order'] ?>" aria-label="Порядок «<?= e($n['title']) ?>»"></td>
             <td class="actions">
               <div class="adm-row-actions">
                 <a class="btn btn-sm" href="<?= e(url('/admin/nodes.php', ['edit' => $nid])) ?>" title="Изменить"><?= icon('edit') ?><span class="hide-sm">Изменить</span></a>
                 <?php if ($n['type'] !== 'link'): ?>
-                <a class="btn btn-sm btn-ghost" href="<?= e(url('/admin/nodes.php', ['new' => 1, 'type' => 'forum', 'parent' => $nid])) ?>" title="Создать подраздел внутри"><?= icon('plus') ?><span class="hide-sm">Подраздел</span></a>
+                <a class="btn btn-sm btn-ghost hide-sm" href="<?= e(url('/admin/nodes.php', ['new' => 1, 'type' => 'forum', 'parent' => $nid])) ?>" title="Создать подраздел внутри"><?= icon('plus') ?><span class="hide-sm">Подраздел</span></a>
                 <?php endif; ?>
                 <?php if ($hasKids): ?>
                 <span class="btn btn-sm btn-ghost btn-icon disabled" title="Сначала удалите подразделы"><?= icon('trash') ?></span>
@@ -697,7 +697,7 @@ admin_header('Разделы форума', 'nodes');
     </div>
     <div class="adm-foot">
       <span class="adm-count">Всего: <?= count($tree) ?>. Порядок считается среди разделов с одним родителем.</span>
-      <button class="btn btn-white" type="submit"><?= icon('check') ?> Сохранить порядок</button>
+      <button class="btn btn-white hide-sm" type="submit"><?= icon('check') ?> Сохранить порядок</button>
     </div>
   </form>
   <?php endif; ?>

@@ -1,0 +1,58 @@
+# World Role Play: настройки Apache для папки public (корень сайта)
+
+# Не показывать список файлов в папках
+Options -Indexes
+
+# Главная страница папки
+DirectoryIndex index.php index.html
+
+AddDefaultCharset UTF-8
+
+<IfModule mod_mime.c>
+  AddType image/svg+xml .svg
+  AddType image/webp .webp
+  AddType video/mp4 .mp4
+  AddType video/webm .webm
+  AddType font/woff2 .woff2
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Метка для установщика: .htaccess и mod_rewrite работают
+  RewriteRule ^ - [E=WRP_REWRITE:1]
+  # Скрытые файлы и папки (.htaccess, .git, .env) закрыты, кроме .well-known (SSL-сертификаты)
+  RewriteRule (^|/)\.(?!well-known(/|$)) - [F,L]
+</IfModule>
+
+# Скрытые файлы закрыты и без mod_rewrite
+<FilesMatch "^\.">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Кэш статики. Ссылки на CSS и JS содержат ?v=время изменения файла, поэтому кэш можно держать долго
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 30 days"
+  ExpiresByType application/javascript "access plus 30 days"
+  ExpiresByType text/javascript "access plus 30 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+  ExpiresByType image/png "access plus 30 days"
+  ExpiresByType image/jpeg "access plus 30 days"
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/gif "access plus 30 days"
+  ExpiresByType image/x-icon "access plus 30 days"
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType video/mp4 "access plus 30 days"
+  ExpiresByType video/webm "access plus 30 days"
+  ExpiresByType text/html "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/javascript application/javascript application/json image/svg+xml
+</IfModule>

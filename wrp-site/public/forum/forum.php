@@ -155,6 +155,7 @@ if (!$container):
       <?php if ($mine): ?>
       <a class="tag filter-tag" href="<?= e(url('/forum/forum.php', array_merge($filterParams, ['mine' => null]))) ?>" title="Убрать фильтр">Только мои темы<?= icon('x') ?></a>
       <?php endif; ?>
+      <span class="muted small thread-count"><?= $hasFilters ? 'Найдено' : 'Всего' ?>: <?= num($pg['total'] + count($pinned)) ?> <?= plural($pg['total'] + count($pinned), 'тема', 'темы', 'тем') ?></span>
     </div>
     <div class="dropdown filter-dd">
       <button class="btn btn-ghost btn-sm" type="button" data-dropdown><?= icon('filter') ?> Фильтры <?= icon('chevron-down') ?></button>

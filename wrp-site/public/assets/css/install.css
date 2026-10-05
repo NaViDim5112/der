@@ -1,0 +1,137 @@
+/* Установщик World Role Play */
+
+.install { font-size: 14px; }
+.install-wrap { width: min(860px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 40px; }
+
+.install-head { display: flex; align-items: center; gap: 16px; margin-bottom: 26px; }
+.install-head img { width: 56px; height: 56px; flex: none; filter: drop-shadow(0 6px 18px rgba(255, 79, 58, .4)); }
+.install-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+.install-head p { margin: 4px 0 0; color: var(--muted); }
+
+.install-steps { display: flex; gap: 8px; margin: 0 0 18px; padding: 0; list-style: none; counter-reset: s; }
+.install-steps li {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 13px;
+}
+.install-steps li span {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--panel-3);
+  color: var(--text-2);
+  font-size: 12px;
+}
+.install-steps li.active { color: var(--text); border-color: rgba(255, 110, 70, .45); }
+.install-steps li.active span { background: var(--accent-grad); color: #fff; }
+.install-steps li.done { color: var(--text-2); }
+.install-steps li.done span { background: rgba(34, 197, 94, .18); color: #4ade80; }
+
+.install-card {
+  margin-bottom: 16px;
+  padding: 22px 24px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .2);
+}
+.install-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.install-card-head h2 { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 800; }
+.step-badge { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px; background: var(--accent-grad); color: #fff; font-size: 13px; }
+
+.req-summary { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+.req-summary.ok { background: rgba(34, 197, 94, .14); color: #4ade80; }
+.req-summary.fail { background: rgba(239, 68, 68, .14); color: #ff7a7a; }
+.req-details > summary { cursor: pointer; color: var(--text-2); font-weight: 700; font-size: 13px; }
+.req-details > summary:hover { color: var(--text); }
+.req-table { width: 100%; margin-top: 12px; border-collapse: collapse; }
+.req-table td { padding: 8px 6px; border-top: 1px solid var(--border); vertical-align: middle; }
+.req-table td:first-child { font-weight: 700; white-space: nowrap; }
+.req-table td.muted { font-size: 12.5px; }
+.req-dot { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 10px; border-radius: 7px; vertical-align: middle; }
+.req-dot .icon { width: 14px; height: 14px; }
+.req-ok .req-dot { background: rgba(34, 197, 94, .16); color: #4ade80; }
+.req-warn .req-dot { background: rgba(245, 158, 11, .16); color: #fbbf24; }
+.req-fail .req-dot { background: rgba(239, 68, 68, .16); color: #ff7a7a; }
+.req-fail td:first-child { color: #ff9a9a; }
+
+.install-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 18px; }
+.form-row-wide { grid-column: 1 / -1; }
+.install-grid .form-row { align-content: start; }
+.form-row-check { align-content: center !important; }
+.install .input { height: 42px; }
+.install .input.is-invalid { border-color: rgba(239, 68, 68, .7); box-shadow: 0 0 0 3px rgba(239, 68, 68, .14); }
+.install .hint { line-height: 1.5; }
+.install .hint code, .install-warning code, .install-result code { padding: 1px 6px; border-radius: 5px; background: var(--panel-3); font-family: var(--mono); font-size: 12px; color: var(--text); }
+.install-flash { margin-bottom: 16px; }
+
+.install-submit { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 6px; }
+.install-submit .btn-lg { height: 52px; padding: 0 30px; }
+
+.install-warning {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(245, 158, 11, .35);
+  background: rgba(245, 158, 11, .08);
+  color: var(--text-2);
+  line-height: 1.55;
+  text-align: left;
+}
+.install-warning .icon { color: #fbbf24; margin-top: 2px; }
+.install-warning b { color: var(--text); }
+.install-warning-big { padding: 18px 20px; border-width: 2px; font-size: 15px; }
+.install-warning-big .icon { width: 22px; height: 22px; }
+
+.install-result { padding: 34px 32px; text-align: center; }
+.install-result h2 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+.install-result > p { max-width: 560px; margin: 10px auto 0; color: var(--text-2); line-height: 1.6; }
+.result-icon { width: 68px; height: 68px; margin: 0 auto 16px; display: grid; place-items: center; border-radius: 20px; }
+.result-icon .icon { width: 34px; height: 34px; }
+.result-ok { background: rgba(34, 197, 94, .16); color: #4ade80; box-shadow: 0 0 0 8px rgba(34, 197, 94, .06); }
+.install-actions { margin-top: 22px; }
+
+.install-links { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 24px; text-align: left; }
+.install-links a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  min-width: 0;
+}
+.install-links a:hover { border-color: rgba(255, 110, 70, .5); color: var(--text); }
+.install-links .icon { width: 22px; height: 22px; color: var(--accent); flex: none; }
+.install-links span { min-width: 0; }
+.install-links b { display: block; font-size: 15px; }
+.install-links small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
+
+.install-foot { margin-top: 26px; text-align: center; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 680px) {
+  .install-wrap { padding-top: 28px; }
+  .install-head h1 { font-size: 21px; }
+  .install-steps li { padding: 8px 10px; font-size: 12px; gap: 8px; }
+  .install-card { padding: 18px 16px; }
+  .install-grid, .install-links { grid-template-columns: minmax(0, 1fr); }
+  .req-table td:first-child { white-space: normal; }
+  .req-table tr { display: grid; }
+  .req-table td.muted { border-top: 0; padding-top: 0; padding-left: 38px; }
+  .install-result { padding: 26px 18px; }
+}

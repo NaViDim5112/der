@@ -201,7 +201,7 @@ if ($form !== null || $editId || isset($_GET['new'])) {
             <?= adm_err($errors, 'display_order') ?>
           </div>
         </div>
-        <div class="hint">Уровень определяет доступ к разделам форума: чем больше, тем больше прав. Пользователь - 10, гость - 0. Уровни других групп: <?= implode(', ', $levels) ?>.</div>
+        <div class="hint">Уровень определяет доступ к разделам форума: чем больше число, тем больше прав. Уровни других групп: <?= implode(', ', $levels) ?>.</div>
       </div>
       <div class="form-row">
         <span class="label">Как это будет выглядеть</span>

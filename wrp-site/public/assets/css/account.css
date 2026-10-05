@@ -1,0 +1,441 @@
+/* Аккаунты: регистрация, настройки, профиль и стена, участники, переписки, личный кабинет */
+
+/* ---------- Общее ---------- */
+
+.acc-invalid { border-color: rgba(239, 68, 68, .65) !important; }
+.acc-invalid:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, .18) !important; }
+.acc-hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+.acc-hint-top { margin-top: -6px; }
+.acc-narrow { max-width: 380px; }
+.acc-card-title { font-size: 15px; font-weight: 800; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.acc-card-title .muted { font-weight: 700; }
+.acc-subtitle { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; margin: 4px 0 6px; padding-top: 18px; border-top: 1px solid var(--border); }
+.acc-subtitle .icon { color: var(--accent); }
+.acc-pager { display: flex; justify-content: flex-end; margin-top: 14px; }
+.acc-inline-form { display: inline; margin: 0; }
+.acc-dot-online { position: absolute; right: 1px; bottom: 1px; width: 12px; height: 12px; border-radius: 50%; background: var(--success); border: 2px solid var(--panel-2); }
+.acc-dot-new { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-2) 22%, transparent); flex: none; }
+.form-grid > .form-row { align-content: start; }
+.acc-section-title { font-size: 17px; font-weight: 800; margin: 0 2px 12px; display: flex; align-items: center; gap: 8px; }
+.acc-section-title .muted { font-weight: 700; font-size: 14px; }
+
+/* Индикатор надёжности пароля */
+.acc-pw-meter { display: flex; align-items: center; gap: 10px; margin-top: -4px; }
+.acc-pw-meter[hidden] { display: none; }
+.acc-pw-meter .meter { flex: 0 1 220px; }
+.acc-pw-meter .meter span { width: 0; transition: width .2s, background .2s; }
+.acc-pw-meter.lvl-1 .meter span { width: 25%; background: var(--danger); }
+.acc-pw-meter.lvl-2 .meter span { width: 50%; background: var(--warning); }
+.acc-pw-meter.lvl-3 .meter span { width: 75%; background: #84cc16; }
+.acc-pw-meter.lvl-4 .meter span { width: 100%; background: var(--success); }
+
+/* ---------- Регистрация и восстановление ---------- */
+
+.acc-captcha .label { color: var(--text); }
+.acc-captcha .input { max-width: 160px; }
+.acc-steps { display: grid; gap: 12px; margin-bottom: 18px; }
+.acc-step { display: flex; gap: 14px; padding: 14px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--border); }
+.acc-step-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; }
+.acc-step p { margin: 4px 0 10px; font-size: 13px; }
+.acc-step p:last-child { margin-bottom: 0; }
+
+/* ---------- Шапка профиля ---------- */
+
+.acc-profile { position: relative; margin-bottom: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.acc-cover { position: relative; height: 230px; background: #1b1626; overflow: hidden; }
+.acc-cover-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.acc-cover-default {
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, .025) 0 2px, transparent 2px 16px),
+    radial-gradient(520px 260px at 12% 115%, rgba(255, 154, 46, .55), transparent 70%),
+    radial-gradient(640px 300px at 88% -25%, rgba(255, 45, 120, .55), transparent 70%),
+    linear-gradient(120deg, #1d1030 0%, #3a1434 42%, #6d1d33 74%, #b2392b 100%);
+}
+.acc-cover::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, .5) 100%); pointer-events: none; }
+.acc-cover-content { position: absolute; left: 206px; right: 20px; bottom: 50px; z-index: 2; color: #fff; }
+.acc-profile-name { font-size: 27px; font-weight: 800; line-height: 1.15; text-shadow: 0 2px 10px rgba(0, 0, 0, .75), 0 0 2px rgba(0, 0, 0, .9); overflow-wrap: anywhere; }
+.acc-profile-status { margin-top: 3px; max-width: 680px; font-size: 13px; font-style: italic; color: rgba(255, 255, 255, .92); text-shadow: 0 1px 4px rgba(0, 0, 0, .8); overflow-wrap: anywhere; }
+.acc-banners { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.acc-banners .user-banner { margin-top: 0; height: 26px; min-width: 130px; padding: 0 14px; }
+.acc-cover-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 18px;
+  min-height: 38px;
+  padding: 8px 20px 8px 206px;
+  background: rgba(8, 6, 12, .62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, .78);
+  font-size: 12.5px;
+}
+.acc-cover-strip b { color: #fff; font-weight: 700; }
+.acc-online { display: inline-flex; align-items: center; gap: 7px; color: #4ade80; font-weight: 800; }
+.acc-online .status-dot { width: 8px; height: 8px; }
+.acc-profile-avatar { position: absolute; left: 28px; top: 118px; z-index: 3; }
+.acc-profile-avatar .avatar { width: 152px; height: 152px; font-size: 64px; border: 5px solid var(--panel); box-shadow: 0 10px 26px rgba(0, 0, 0, .4); }
+.acc-dot-big { right: 12px; bottom: 12px; width: 24px; height: 24px; border: 4px solid var(--panel); }
+.acc-profile-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 20px; min-height: 66px; padding: 12px 18px 12px 206px; }
+.acc-profile-stats { display: flex; gap: 30px; margin: 0; }
+.acc-profile-stats div { display: grid; gap: 0; }
+.acc-profile-stats dt { font-size: 12px; font-weight: 700; color: var(--muted); }
+.acc-profile-stats dd { margin: 0; font-size: 19px; font-weight: 800; }
+.acc-profile-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 8px; }
+.acc-profile-actions form { margin: 0; }
+.acc-profile-actions .btn { height: 34px; }
+.acc-profile-actions .dropdown-menu .icon { width: 16px; height: 16px; }
+
+/* Вкладки-«пилюли» */
+.acc-pills { display: flex; gap: 4px; padding: 5px; margin-bottom: 14px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow-x: auto; scrollbar-width: none; }
+.acc-pills::-webkit-scrollbar { display: none; }
+.acc-pills a { padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 800; color: var(--text-2); white-space: nowrap; }
+.acc-pills a:hover { background: var(--panel-3); color: var(--text); }
+.acc-pills a.active { background: var(--white-btn); color: var(--white-btn-text); }
+
+/* ---------- Стена профиля ---------- */
+
+.acc-wall { display: grid; gap: 14px; }
+.acc-wall .card + .card { margin-top: 0; }
+.acc-composer { display: flex; gap: 12px; align-items: flex-start; padding: 14px; }
+.acc-wall-guest { display: flex; gap: 8px; align-items: center; padding: 14px 18px; }
+.acc-wall-guest a { color: var(--accent); font-weight: 700; }
+.acc-expand-body { flex: 1; min-width: 0; display: grid; gap: 8px; }
+.acc-expand-input { height: 40px; min-height: 40px; padding: 9px 12px; resize: none; overflow: hidden; line-height: 1.45; }
+.acc-composer .acc-expand-input { height: 52px; min-height: 52px; padding: 14px; border-radius: 10px; }
+[data-acc-expand].expanded .acc-expand-input { height: 88px; resize: vertical; overflow: auto; }
+.acc-comment-form.expanded .acc-expand-input { height: 66px; }
+.acc-expand-actions { display: none; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.acc-comment-form .acc-expand-actions { justify-content: flex-end; }
+[data-acc-expand].expanded .acc-expand-actions, [data-acc-expand]:focus-within .acc-expand-actions { display: flex; }
+
+.acc-wall-list { padding: 2px 18px; }
+.acc-wall-post { padding: 16px 0; border-bottom: 1px solid var(--border); scroll-margin-top: 80px; }
+.acc-wall-post:last-child { border-bottom: 0; }
+.acc-wall-post:target .acc-wall-body, .acc-comment:target .acc-comment-text { animation: acc-flash 2s ease; border-radius: 6px; }
+@keyframes acc-flash { 0%, 40% { background: var(--accent-soft); } 100% { background: transparent; } }
+.acc-wall-row { display: flex; gap: 14px; }
+.acc-wall-avatar { flex: none; }
+.acc-wall-main { flex: 1; min-width: 0; }
+.acc-wall-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 14px; }
+.acc-wall-arrow { display: inline-flex; color: var(--muted); }
+.acc-wall-arrow .icon { width: 14px; height: 14px; }
+.acc-wall-body { margin-top: 4px; }
+.acc-wall-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.acc-wall-date { color: var(--muted); }
+a.acc-wall-date:hover { color: var(--text); text-decoration: underline; }
+.acc-link-btn { display: inline-flex; align-items: center; gap: 5px; padding: 0; border: 0; background: none; color: var(--muted); font-size: 12px; font-weight: 700; cursor: pointer; }
+.acc-link-btn .icon { width: 14px; height: 14px; }
+.acc-link-btn:hover { color: var(--text); }
+.acc-link-btn.is-liked { color: var(--accent); }
+.acc-link-btn.acc-link-danger:hover { color: #ff7a7a; }
+.acc-link-btn[disabled] { opacity: .5; pointer-events: none; }
+.acc-likes-line { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 6px 10px; border-radius: 8px; background: var(--panel-2); font-size: 12px; color: var(--text-2); }
+.acc-likes-line[hidden] { display: none; }
+.acc-likes-line .username { font-weight: 700; }
+.acc-like-icon { display: inline-grid; place-items: center; width: 20px; height: 20px; flex: none; border-radius: 50%; background: var(--accent-grad); color: #fff; }
+.acc-like-icon .icon { width: 11px; height: 11px; }
+.acc-comments { margin-top: 10px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel-2); }
+.acc-comment { padding: 10px 0; scroll-margin-top: 80px; }
+.acc-comment + .acc-comment, .acc-comment + .acc-comment-form, .acc-comments-more + .acc-comment { border-top: 1px solid var(--border); }
+.acc-comment-row { display: flex; gap: 10px; }
+.acc-comment-main { flex: 1; min-width: 0; }
+.acc-comment-text { font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
+.acc-comment-text .bb { display: inline; }
+.acc-comment-foot { margin-top: 4px; gap: 4px 14px; }
+.acc-comment .acc-likes-line { background: var(--panel-3); margin-top: 6px; }
+.acc-comment-form { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; }
+.acc-comment-form .avatar { margin-top: 5px; }
+.acc-comment-form .textarea { background: var(--input); }
+.acc-comments-more > summary { padding: 9px 0; font-size: 12px; font-weight: 800; color: var(--text-2); cursor: pointer; list-style: none; }
+.acc-comments-more > summary::-webkit-details-marker { display: none; }
+.acc-comments-more > summary:hover { color: var(--text); }
+.acc-comments-more[open] > summary { border-bottom: 1px solid var(--border); }
+.acc-ignored > summary { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; cursor: pointer; list-style: none; }
+.acc-ignored > summary::-webkit-details-marker { display: none; }
+.acc-ignored > summary .icon { width: 15px; height: 15px; }
+.acc-ignored > summary:hover { color: var(--text); }
+.acc-ignored[open] > summary { margin-bottom: 10px; }
+
+/* ---------- Активность, публикации, темы ---------- */
+
+.acc-list { padding: 4px 18px; }
+.acc-list-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.acc-activity, .acc-result { display: flex; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+.acc-activity:last-child, .acc-result:last-child { border-bottom: 0; }
+.acc-activity-body, .acc-result-body { flex: 1; min-width: 0; }
+.acc-activity-title { font-size: 13.5px; overflow-wrap: anywhere; }
+.acc-activity-title a { font-weight: 700; }
+.acc-activity-snippet { margin-top: 3px; font-size: 13px; color: var(--text-2); overflow-wrap: anywhere; }
+.acc-activity-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; margin-top: 4px; font-size: 12px; color: var(--muted); }
+.acc-activity-meta a { color: var(--muted); }
+.acc-activity-meta a:hover { color: var(--text); text-decoration: underline; }
+.acc-activity-meta .icon { width: 13px; height: 13px; }
+.acc-result-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border-radius: 10px; border: 1px solid var(--border); background: var(--panel-3); color: var(--text-2); }
+.acc-result-icon .icon { width: 17px; height: 17px; }
+.acc-result-title { font-size: 14px; font-weight: 800; color: var(--text); overflow-wrap: anywhere; }
+.acc-result-title:hover { color: var(--accent); }
+.acc-result-sub { margin-top: 2px; font-size: 12.5px; color: var(--text-2); }
+
+/* ---------- Информация в профиле ---------- */
+
+.acc-about { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+.acc-about-main, .acc-about-side { display: grid; gap: 16px; min-width: 0; }
+.acc-about .card + .card { margin-top: 0; }
+.acc-kv dd { overflow-wrap: anywhere; }
+.acc-groups { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.acc-avatar-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.acc-signature-demo { padding: 10px 14px; border-left: 3px solid var(--border-strong); border-radius: 8px; background: var(--panel-2); font-size: 13px; }
+
+/* ---------- Настройки аккаунта ---------- */
+
+.acc-account { display: grid; grid-template-columns: 224px minmax(0, 1fr); gap: 18px; align-items: start; }
+.acc-side { position: sticky; top: 76px; display: grid; gap: 2px; padding: 10px; }
+.acc-side-head { display: flex; align-items: center; gap: 10px; padding: 8px; margin-bottom: 4px; border-radius: 10px; background: var(--panel-2); }
+.acc-side-head span { display: grid; min-width: 0; line-height: 1.3; }
+.acc-side-head b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-side-head small { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.acc-side-head:hover small { color: var(--accent); }
+.acc-side-title { margin: 12px 10px 4px; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.acc-side-link { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--text-2); }
+.acc-side-link .icon { width: 16px; height: 16px; }
+.acc-side-link:hover { background: var(--panel-3); color: var(--text); }
+.acc-side-link.active { background: var(--panel-3); color: var(--text); box-shadow: inset 3px 0 0 var(--accent); }
+.acc-account-main { min-width: 0; }
+.acc-account-main > .card + .card { margin-top: 16px; }
+.acc-two { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 16px; align-items: start; }
+.acc-two-main { display: grid; gap: 16px; min-width: 0; }
+.acc-two-main .card + .card { margin-top: 0; }
+.acc-two-side { position: sticky; top: 76px; }
+
+.acc-upload { display: flex; align-items: center; gap: 18px; }
+.acc-upload-preview { flex: none; }
+.acc-upload-body { display: grid; gap: 10px; min-width: 0; }
+.acc-upload-body form { margin: 0; }
+.acc-upload-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.acc-file { position: relative; display: inline-flex; align-items: center; gap: 10px; min-width: 0; cursor: pointer; }
+.acc-file input { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; }
+.acc-file .btn { pointer-events: none; }
+.acc-file:focus-within .btn { border-color: var(--accent); }
+.acc-file-name { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-cover-edit { position: relative; padding-bottom: 25%; border-radius: 10px; overflow: hidden; background-color: var(--panel-3); border: 1px solid var(--border); }
+.acc-cover-edit img, .acc-preview-cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.acc-preview { position: relative; padding: 0 0 14px; overflow: hidden; }
+.acc-preview-label { position: absolute; top: 8px; left: 10px; z-index: 2; padding: 2px 8px; border-radius: 6px; background: rgba(0, 0, 0, .45); color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.acc-preview-cover { position: relative; height: 84px; }
+.acc-preview-body { position: relative; margin-top: -42px; padding: 0 14px 12px; text-align: center; }
+.acc-preview-avatar .avatar { border: 4px solid var(--panel); box-shadow: 0 6px 16px rgba(0, 0, 0, .3); }
+.acc-preview-name { margin-top: 4px; font-size: 17px; font-weight: 800; overflow-wrap: anywhere; }
+.acc-preview-title { font-size: 12.5px; color: var(--text-2); overflow-wrap: anywhere; }
+.acc-preview-banners { margin-top: 4px; }
+.acc-preview-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--border); }
+.acc-preview-stats dt { font-size: 11px; color: var(--muted); }
+.acc-preview-stats dd { margin: 0; font-weight: 800; }
+.acc-preview > .btn { width: calc(100% - 28px); margin: 0 14px; }
+
+.acc-people { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }
+.acc-person { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--border); }
+.acc-person-body { flex: 1; min-width: 0; }
+.acc-person-body .username { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-person form { margin: 0; }
+.acc-inline-add { display: flex; gap: 8px; max-width: 480px; }
+.acc-inline-add .input { flex: 1; }
+
+/* ---------- Участники, онлайн, администрация ---------- */
+
+.acc-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.acc-filter .input { flex: 1 1 220px; width: auto; }
+.acc-filter .select { flex: 0 1 210px; width: auto; }
+.acc-top { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.acc-top-item { position: relative; display: grid; justify-items: center; gap: 4px; padding: 16px 8px 12px; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--border); text-align: center; min-width: 0; transition: border-color .15s, transform .15s; }
+.acc-top-item:hover { border-color: color-mix(in srgb, var(--accent-2) 55%, transparent); transform: translateY(-2px); }
+.acc-top-item .username { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.acc-top-rank { position: absolute; top: 8px; left: 10px; font-size: 12px; font-weight: 800; color: var(--muted); }
+.acc-top-item:nth-child(1) .acc-top-rank { color: #ffc23a; }
+.acc-top-item:nth-child(2) .acc-top-rank { color: #cbd5e1; }
+.acc-top-item:nth-child(3) .acc-top-rank { color: #f59e6b; }
+.acc-top-count { font-size: 12px; color: var(--muted); }
+.acc-top-count b { color: var(--text); }
+.acc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.acc-mcard { display: flex; align-items: flex-start; gap: 12px; padding: 12px; min-width: 0; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--border); transition: border-color .15s, background .15s; }
+.acc-mcard:hover { border-color: color-mix(in srgb, var(--accent-2) 55%, transparent); background: var(--panel-hover); }
+.acc-mcard-avatar { position: relative; flex: none; }
+.acc-mcard-body { flex: 1; min-width: 0; }
+.acc-mcard-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.acc-mcard-title { font-size: 12px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-mcard-stats { display: flex; flex-wrap: wrap; gap: 2px 12px; margin-top: 6px; font-size: 11.5px; color: var(--muted); }
+.acc-mcard-stats b { color: var(--text); font-weight: 800; }
+.acc-mcard-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 8px; margin-top: 8px; }
+.acc-mcard-foot .btn { height: 26px; padding: 0 9px; font-size: 11.5px; }
+.acc-seen { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.acc-seen.on { color: #4ade80; font-weight: 700; }
+.acc-online-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.acc-stat { padding: 14px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--border); }
+.acc-stat b { display: block; font-size: 24px; font-weight: 800; line-height: 1.2; }
+.acc-stat span { font-size: 12px; color: var(--muted); font-weight: 700; }
+.acc-stat:first-child b { background: var(--accent-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.acc-staff-group { margin-bottom: 18px; }
+.acc-staff-head { display: flex; align-items: center; gap: 10px; padding: 8px 10px 12px; }
+.acc-staff-head h2 { font-size: 17px; font-weight: 800; }
+.acc-gdot { width: 10px; height: 10px; flex: none; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 22%, transparent); }
+.acc-staff-head .muted { margin-left: auto; font-size: 12px; font-weight: 700; }
+
+/* ---------- Сообщения профилей (общий список) ---------- */
+
+.acc-search { display: flex; gap: 8px; }
+.acc-search .input { flex: 1; }
+
+/* ---------- Личные переписки ---------- */
+
+.acc-conv-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) 84px 210px; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; margin-bottom: 7px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--border); transition: border-color .15s, background .15s; }
+.acc-conv-row:last-child { margin-bottom: 0; }
+.acc-conv-row:hover { border-color: color-mix(in srgb, var(--accent-2) 55%, transparent); background: var(--panel-hover); }
+.acc-conv-row.unread { box-shadow: inset 3px 0 0 var(--accent-2); }
+.acc-conv-main { min-width: 0; }
+.acc-conv-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--text); }
+.acc-conv-title span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-conv-row.unread .acc-conv-title { font-weight: 800; }
+.acc-conv-meta { margin-top: 2px; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-conv-meta .username { font-weight: 600; }
+.acc-conv-stats { text-align: center; font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+.acc-conv-stats b { display: block; font-size: 14px; color: var(--text); }
+.acc-conv-last { display: flex; align-items: center; gap: 9px; min-width: 0; padding-left: 10px; border-left: 1px solid var(--border); font-size: 12px; line-height: 1.35; }
+.acc-conv-last > div { min-width: 0; }
+.acc-conv-last .muted { display: block; white-space: nowrap; }
+.acc-stack { display: flex; align-items: center; }
+.acc-stack .avatar { border: 2px solid var(--panel-2); }
+.acc-stack .avatar + .avatar { margin-left: -12px; }
+.acc-stack-more { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-left: -12px; border-radius: 50%; border: 2px solid var(--panel-2); background: var(--panel-3); font-size: 11px; font-weight: 800; color: var(--text-2); }
+
+.acc-conv { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 16px; align-items: start; }
+.acc-conv-side { position: sticky; top: 76px; display: grid; gap: 16px; }
+.acc-conv-side .card + .card { margin-top: 0; }
+.acc-msg { display: flex; margin-bottom: 10px; border-radius: var(--radius-lg); background: var(--panel); border: 1px solid var(--border); overflow: hidden; scroll-margin-top: 80px; }
+.acc-msg.is-new { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.acc-msg-side { display: grid; justify-items: center; align-content: start; gap: 6px; width: 150px; flex: none; padding: 14px 10px; text-align: center; background: var(--panel-2); border-right: 1px solid var(--border); }
+.acc-msg-side .username { max-width: 100%; font-size: 12.5px; overflow-wrap: anywhere; }
+.acc-msg-side .muted { font-size: 11px; line-height: 1.3; }
+.acc-msg-main { flex: 1; min-width: 0; padding: 12px 16px 14px; }
+.acc-msg-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-bottom: 8px; margin-bottom: 10px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+.acc-msg-head a { color: var(--muted); }
+.acc-msg-head a:hover { color: var(--text); }
+.acc-msg-user { display: none; }
+.acc-reply { margin-top: 6px; }
+.acc-reply .form-actions { justify-content: space-between; }
+.acc-part { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+.acc-part + .acc-part { border-top: 1px solid var(--border); }
+.acc-part-body { min-width: 0; flex: 1; line-height: 1.3; }
+.acc-part-body .username { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.acc-part.is-left { opacity: .55; }
+.acc-conv-side form { margin: 0; }
+.acc-conv-side .acc-inline-add { margin-top: 10px; }
+.acc-conv-side .acc-inline-add .btn { padding: 0 10px; }
+
+/* ---------- Личный кабинет ---------- */
+
+.acc-cabinet { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 18px; align-items: start; }
+.acc-cabinet .card + .card { margin-top: 0; }
+.acc-cab-side, .acc-cab-main { display: grid; gap: 16px; min-width: 0; }
+.acc-cab-user { padding: 0 0 14px; overflow: hidden; text-align: center; }
+.acc-cab-user .acc-preview-cover { height: 90px; }
+.acc-cab-links { display: grid; gap: 2px; padding: 0 10px; margin-top: 12px; text-align: left; }
+.acc-cab-links a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--text-2); }
+.acc-cab-links a:hover { background: var(--panel-3); color: var(--text); }
+.acc-cab-links .icon { width: 16px; height: 16px; }
+.acc-cab-links .count-badge { position: static; margin-left: auto; }
+.acc-game-head { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.acc-game-icon { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border-radius: 12px; background: var(--accent-grad); color: #fff; box-shadow: 0 8px 22px rgba(255, 70, 70, .25); }
+.acc-game-icon .icon { width: 24px; height: 24px; }
+.acc-game-icon.off { background: var(--panel-3); color: var(--muted); box-shadow: none; }
+.acc-game-head h2 { font-size: 18px; font-weight: 800; }
+.acc-game-head p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.acc-game-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.acc-game-stat { padding: 12px 14px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--border); min-width: 0; }
+.acc-game-stat span { display: block; font-size: 12px; font-weight: 700; color: var(--muted); }
+.acc-game-stat b { display: block; font-size: 17px; font-weight: 800; overflow-wrap: anywhere; }
+.acc-game-nick { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); font-weight: 800; }
+.acc-game-nick .icon { width: 16px; height: 16px; color: var(--success); }
+.acc-code { margin: 10px 0 0; padding: 12px 14px; border-radius: 8px; background: #08070c; border: 1px solid var(--border); font-family: var(--mono); font-size: 12px; line-height: 1.55; color: #e8e6f0; overflow: auto; white-space: pre; }
+.acc-admin-hint { margin-top: 14px; padding: 14px; border-radius: 12px; border: 1px dashed var(--border-strong); background: var(--panel-2); font-size: 13px; }
+.acc-admin-hint > b { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.acc-admin-hint ul { margin: 6px 0 0; padding-left: 20px; color: var(--text-2); }
+.acc-server-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.acc-server-name { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 15px; }
+.acc-server-online { margin: 12px 0 6px; font-size: 13px; color: var(--muted); }
+.acc-server-online b { font-size: 22px; color: var(--text); }
+.acc-server .meter { margin-bottom: 14px; }
+
+/* ---------- Адаптив ---------- */
+
+@media (max-width: 1100px) {
+  .acc-two { grid-template-columns: minmax(0, 1fr); }
+  .acc-two-side { position: static; order: -1; }
+  .acc-preview { max-width: 420px; }
+  .acc-conv { grid-template-columns: minmax(0, 1fr); }
+  .acc-conv-side { position: static; }
+  .acc-top { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .acc-top-item:nth-child(n+4) { display: none; }
+}
+
+@media (max-width: 900px) {
+  .acc-account { grid-template-columns: minmax(0, 1fr); }
+  .acc-side { position: static; display: flex; gap: 4px; overflow-x: auto; padding: 5px; scrollbar-width: none; }
+  .acc-side::-webkit-scrollbar { display: none; }
+  .acc-side-head, .acc-side-title { display: none; }
+  .acc-side-link { flex: none; white-space: nowrap; }
+  .acc-side-link.active { box-shadow: inset 0 -2px 0 var(--accent); }
+  .acc-about { grid-template-columns: minmax(0, 1fr); }
+  .acc-cabinet { grid-template-columns: minmax(0, 1fr); }
+  .acc-conv-row { grid-template-columns: 56px minmax(0, 1fr) 170px; }
+  .acc-conv-stats { display: none; }
+}
+
+@media (max-width: 700px) {
+  /* Картинка обложки сверху 150px, имя и сведения - обычным потоком под ней */
+  .acc-cover { height: auto; padding-top: 150px; overflow: visible; background-color: transparent; }
+  .acc-cover-default { background-size: 100% 150px; background-repeat: no-repeat; }
+  .acc-cover-img { bottom: auto; height: 150px; }
+  .acc-cover::after { bottom: auto; height: 150px; }
+  .acc-cover-content, .acc-cover-strip { position: static; }
+  .acc-cover-content { min-height: 50px; padding: 8px 16px 0 124px; color: var(--text); }
+  .acc-profile-name { text-shadow: none; font-size: 21px; }
+  .acc-profile-status { color: var(--text-2); text-shadow: none; }
+  .acc-banners .user-banner { min-width: 0; }
+  .acc-cover-strip { margin: 12px 16px 0; padding: 8px 12px; border-radius: 10px; background: var(--panel-2); color: var(--text-2); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .acc-cover-strip b { color: var(--text); }
+  .acc-profile-avatar { top: 92px; left: 16px; }
+  .acc-pills a { padding: 7px 13px; font-size: 12.5px; }
+  .acc-profile-avatar .avatar { width: 96px; height: 96px; font-size: 40px; border-width: 4px; }
+  .acc-dot-big { right: 6px; bottom: 6px; width: 18px; height: 18px; border-width: 3px; }
+  .acc-profile-bar { padding: 12px 16px 14px; }
+  .acc-profile-stats { gap: 22px; }
+  .acc-profile-actions { justify-content: flex-start; }
+  .acc-profile-actions .btn { height: 32px; padding: 0 12px; font-size: 12px; }
+  .acc-wall-list, .acc-list { padding-left: 12px; padding-right: 12px; }
+  .acc-composer { padding: 12px; }
+  .acc-composer > .avatar { display: none; }
+  .acc-wall-row { gap: 10px; }
+  .acc-wall-avatar .avatar { width: 38px; height: 38px; font-size: 16px; }
+  .acc-upload { flex-direction: column; align-items: flex-start; }
+  .acc-online-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .acc-stat { padding: 10px 12px; }
+  .acc-stat b { font-size: 19px; }
+  .acc-top { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .acc-top-item:nth-child(n+3) { display: none; }
+  .acc-conv-row { grid-template-columns: 46px minmax(0, 1fr); padding: 10px; }
+  .acc-conv-last { grid-column: 2; padding-left: 0; border-left: 0; }
+  .acc-conv-last .avatar { display: none; }
+  .acc-stack .avatar + .avatar, .acc-stack-more { display: none; }
+  .acc-msg { flex-direction: column; }
+  .acc-msg-side { display: none; }
+  .acc-msg-user { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .acc-msg-user .username { font-size: 13px; }
+  .acc-filter .select { flex: 1 1 140px; }
+  .acc-inline-add { flex-wrap: wrap; }
+}
