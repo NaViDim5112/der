@@ -26,6 +26,9 @@ CREATE TABLE IF NOT EXISTS `users` (
   `secondary_groups` VARCHAR(255) NULL,
   `custom_title` VARCHAR(64) NULL,
   `avatar` VARCHAR(64) NULL,
+  `cover` VARCHAR(64) NULL,
+  `location` VARCHAR(64) NULL,
+  `status_text` VARCHAR(140) NULL,
   `signature` TEXT NULL,
   `about` TEXT NULL,
   `game_nick` VARCHAR(32) NULL,
@@ -67,6 +70,7 @@ CREATE TABLE IF NOT EXISTS `nodes` (
   `default_prefix_id` INT UNSIGNED NULL,
   `title_hint` VARCHAR(120) NULL,
   `thread_template` TEXT NULL,
+  `form_json` TEXT NULL,
   `thread_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `post_count` INT UNSIGNED NOT NULL DEFAULT 0,
   `last_thread_id` INT UNSIGNED NULL,
@@ -297,4 +301,65 @@ CREATE TABLE IF NOT EXISTS `nav_links` (
   `display_order` INT NOT NULL DEFAULT 0,
   `new_tab` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Стена профиля: сообщения и комментарии к ним
+CREATE TABLE IF NOT EXISTS `profile_posts` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `profile_user_id` INT UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `body` TEXT NOT NULL,
+  `likes_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_profile` (`profile_user_id`, `is_deleted`, `id`),
+  KEY `idx_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `profile_comments` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `profile_post_id` INT UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `body` TEXT NOT NULL,
+  `likes_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_post` (`profile_post_id`, `is_deleted`, `id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Лайки на стене профиля: content_type = 'post' | 'comment'
+CREATE TABLE IF NOT EXISTS `profile_likes` (
+  `content_type` VARCHAR(8) NOT NULL,
+  `content_id` INT UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `reaction` VARCHAR(16) NOT NULL DEFAULT 'like',
+  `created_at` DATETIME NOT NULL,
+  PRIMARY KEY (`content_type`, `content_id`, `user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Подписки на пользователей и игнор
+CREATE TABLE IF NOT EXISTS `user_follows` (
+  `user_id` INT UNSIGNED NOT NULL,
+  `follow_user_id` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  PRIMARY KEY (`user_id`, `follow_user_id`),
+  KEY `idx_follow` (`follow_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `user_ignores` (
+  `user_id` INT UNSIGNED NOT NULL,
+  `ignored_user_id` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  PRIMARY KEY (`user_id`, `ignored_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Подписка на разделы (оповещение о новых темах)
+CREATE TABLE IF NOT EXISTS `node_watch` (
+  `user_id` INT UNSIGNED NOT NULL,
+  `node_id` INT UNSIGNED NOT NULL,
+  `created_at` DATETIME NOT NULL,
+  PRIMARY KEY (`user_id`, `node_id`),
+  KEY `idx_node` (`node_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

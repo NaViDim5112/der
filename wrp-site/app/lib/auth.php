@@ -367,6 +367,18 @@ function group_badge($u)
     return '<span class="group-badge" style="--c:' . e($color) . '">' . e($u['group_name']) . '</span>';
 }
 
+// Баллы пользователя: темы x3 + сообщения + реакции x2
+function user_points($u)
+{
+    return (int)($u['threads_count'] ?? 0) * 3 + (int)($u['posts_count'] ?? 0) + (int)($u['likes_received'] ?? 0) * 2;
+}
+
+// Обложка профиля (url или пусто)
+function user_cover_url($u)
+{
+    return !empty($u['cover']) ? url('/uploads/covers/' . $u['cover']) : '';
+}
+
 // Проверка ника: буквы, цифры, _ - . и пробел, 3-24 символа
 function username_valid($name)
 {

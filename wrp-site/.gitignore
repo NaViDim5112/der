@@ -10,3 +10,5 @@
 /storage/installed.lock
 /tests/node_modules/
 /tests/screens/
+/public/uploads/covers/*
+!/public/uploads/covers/.gitkeep

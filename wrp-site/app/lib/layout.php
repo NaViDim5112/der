@@ -1,6 +1,8 @@
 <?php
 // Оболочка форума: левое меню, верхняя панель, заголовок с «хлебными крошками», правая колонка.
 // Используется форумом, базой знаний, кабинетом и страницами аккаунта.
+// Параметры: title, h1_html, meta_html, title_actions (HTML кнопок справа от заголовка, например «Создать тему»),
+// crumbs, nav, right, css, js, body_class, description.
 //
 //   forum_header(['title' => 'Форум', 'crumbs' => [['Форумы', url('/forum/')]], 'nav' => 'forums']);
 //   ... HTML страницы ...
@@ -53,7 +55,15 @@ function forum_header(array $o = [])
   </div>
   <nav class="side-nav">
     <a class="side-link<?= $nav === 'home' ? ' active' : '' ?>" href="<?= e(url('/')) ?>"><?= icon('home') ?><span>Главная</span></a>
-    <a class="side-link<?= $nav === 'forums' ? ' active' : '' ?>" href="<?= e(url('/forum/')) ?>"><?= icon('chats') ?><span>Форумы</span></a>
+    <div class="side-group side-split">
+      <a class="side-link<?= $nav === 'forums' ? ' active' : '' ?>" href="<?= e(url('/forum/')) ?>"><?= icon('chats') ?><span>Форумы</span></a>
+      <button class="side-caret-btn" type="button" data-side-group aria-label="Ещё"><?= icon('chevron-down', 'side-caret') ?></button>
+      <div class="side-sub">
+        <a href="<?= e(url('/forum/find.php', ['type' => 'new'])) ?>">Новые сообщения</a>
+        <a href="<?= e(url('/forum/find.php', ['type' => 'unanswered'])) ?>">Темы без ответов</a>
+        <a href="<?= e(url('/forum/search.php')) ?>">Поиск по форуму</a>
+      </div>
+    </div>
     <div class="side-group<?= $nav === 'members' ? ' open' : '' ?>">
       <button class="side-link<?= $nav === 'members' ? ' active' : '' ?>" type="button" data-side-group><?= icon('users') ?><span>Пользователи</span><?= icon('chevron-down', 'side-caret') ?></button>
       <div class="side-sub">
@@ -67,7 +77,14 @@ function forum_header(array $o = [])
     <a class="side-link<?= $nav === 'link-' . $l['id'] ? ' active' : '' ?>" href="<?= e(nav_link_href($l['url'])) ?>"<?= $l['new_tab'] ? ' target="_blank" rel="noopener"' : '' ?>><?= icon($l['icon']) ?><span><?= e($l['title']) ?></span></a>
     <?php endforeach; ?>
   </nav>
-  <?php if ($u): ?>
+  <?php if ($nav === 'members'): ?>
+  <div class="side-section">Раздел навигации</div>
+  <nav class="side-nav side-nav-small">
+    <a class="side-link" href="<?= e(url('/forum/online.php')) ?>"><?= icon('users') ?><span>Текущие посетители</span></a>
+    <a class="side-link" href="<?= e(url('/forum/profile-posts.php')) ?>"><?= icon('edit') ?><span>Новые сообщения профилей</span></a>
+    <a class="side-link" href="<?= e(url('/forum/profile-posts.php', ['search' => 1])) ?>"><?= icon('chat') ?><span>Поиск сообщений профилей</span></a>
+  </nav>
+  <?php elseif ($u): ?>
   <div class="side-section">Раздел навигации</div>
   <nav class="side-nav side-nav-small">
     <div class="side-group">
@@ -108,19 +125,43 @@ function forum_header(array $o = [])
         <div class="btn-group">
           <div class="dropdown">
             <button class="btn btn-ghost user-pill" type="button" data-dropdown><?= avatar($u, 'xs') ?><span class="user-pill-name"><?= e($u['username']) ?></span></button>
-            <div class="dropdown-menu dropdown-right">
-              <div class="dropdown-head"><?= avatar($u, 'm') ?><div><?= user_link($u) ?><div class="muted small"><?= e($u['custom_title'] ?: $u['group_name']) ?></div></div></div>
-              <a href="<?= e(url('/forum/member.php', ['id' => $u['id']])) ?>"><?= icon('user') ?> Мой профиль</a>
-              <a href="<?= e(url('/cabinet/')) ?>"><?= icon('gamepad') ?> Личный кабинет</a>
-              <a href="<?= e(url('/forum/account.php')) ?>"><?= icon('settings') ?> Настройки</a>
-              <a href="<?= e(url('/forum/conversations.php')) ?>"><?= icon('mail') ?> Личные сообщения</a>
-              <a href="<?= e(url('/forum/watched.php')) ?>"><?= icon('bookmark') ?> Отслеживаемые темы</a>
-              <?php if (can_admin()): ?>
-              <a href="<?= e(url('/admin/')) ?>"><?= icon('shield') ?> Админ-панель</a>
-              <?php endif; ?>
-              <form method="post" action="<?= e(url('/forum/logout.php')) ?>">
+            <div class="dropdown-menu dropdown-right account-menu">
+              <div class="account-menu-tabs"><span class="active">Ваш аккаунт</span><a href="<?= e(url('/forum/watched.php')) ?>">Закладки</a></div>
+              <div class="account-menu-head">
+                <a href="<?= e(url('/forum/member.php', ['id' => $u['id']])) ?>"><?= avatar($u, 'xl') ?></a>
+                <div class="account-menu-info">
+                  <?= user_link($u) ?>
+                  <dl class="account-menu-stats">
+                    <dt>Сообщения:</dt><dd><?= num($u['posts_count']) ?></dd>
+                    <dt>Реакции:</dt><dd><?= num($u['likes_received']) ?></dd>
+                    <dt>Баллы:</dt><dd><?= num(user_points($u)) ?></dd>
+                  </dl>
+                </div>
+              </div>
+              <div class="account-menu-links">
+                <a href="<?= e(url('/forum/member.php', ['id' => $u['id']])) ?>">Мой профиль</a>
+                <a href="<?= e(url('/forum/alerts.php')) ?>">Оповещения</a>
+                <a href="<?= e(url('/forum/find.php', ['type' => 'mine'])) ?>">Ваши публикации</a>
+                <a href="<?= e(url('/forum/watched.php')) ?>">Отслеживаемые темы</a>
+              </div>
+              <div class="account-menu-links">
+                <a href="<?= e(url('/forum/account.php', ['tab' => 'profile'])) ?>">Информация</a>
+                <a href="<?= e(url('/forum/account.php', ['tab' => 'signature'])) ?>">Подпись</a>
+                <a href="<?= e(url('/forum/account.php', ['tab' => 'security'])) ?>">Безопасность</a>
+                <a href="<?= e(url('/forum/account.php', ['tab' => 'following'])) ?>">Подписки</a>
+                <a href="<?= e(url('/forum/account.php', ['tab' => 'ignored'])) ?>">Игнорирование</a>
+                <a href="<?= e(url('/forum/conversations.php')) ?>">Личные сообщения</a>
+                <a href="<?= e(url('/cabinet/')) ?>">Личный кабинет</a>
+                <?php if (can_admin()): ?><a href="<?= e(url('/admin/')) ?>">Админ-панель</a><?php endif; ?>
+              </div>
+              <form method="post" action="<?= e(url('/forum/logout.php')) ?>" class="account-menu-logout">
                 <?= csrf_field() ?>
                 <button type="submit"><?= icon('logout') ?> Выход</button>
+              </form>
+              <form method="post" action="<?= e(url('/forum/account.php')) ?>" class="account-menu-status">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="status">
+                <input class="input" name="status_text" maxlength="140" placeholder="Обновить свой статус..." value="<?= e($u['status_text'] ?? '') ?>">
               </form>
             </div>
           </div>
@@ -138,7 +179,10 @@ function forum_header(array $o = [])
     </header>
 
     <section class="titlebar">
-      <h1><?= isset($o['h1_html']) ? $o['h1_html'] : e($title) ?></h1>
+      <div class="titlebar-head">
+        <h1><?= isset($o['h1_html']) ? $o['h1_html'] : e($title) ?></h1>
+        <?php if (!empty($o['title_actions'])): ?><div class="titlebar-actions"><?= $o['title_actions'] ?></div><?php endif; ?>
+      </div>
       <?php if (!empty($o['meta_html'])): ?><div class="titlebar-meta"><?= $o['meta_html'] ?></div><?php endif; ?>
       <div class="titlebar-row">
         <nav class="crumbs" aria-label="Навигация">

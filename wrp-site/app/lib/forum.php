@@ -464,9 +464,45 @@ function thread_watch($threadId, $on = true, $userId = null)
     }
 }
 
+// ---------- Подписка на разделы ----------
+
+function node_is_watched($nodeId)
+{
+    if (!is_logged()) {
+        return false;
+    }
+    return (bool)db_val('SELECT 1 FROM node_watch WHERE user_id = :u AND node_id = :n', ['u' => uid(), 'n' => (int)$nodeId]);
+}
+
+function node_watch($nodeId, $on = true)
+{
+    if (!is_logged()) {
+        return;
+    }
+    if ($on) {
+        db_exec('INSERT IGNORE INTO node_watch (user_id, node_id, created_at) VALUES (:u, :n, :c)', ['u' => uid(), 'n' => (int)$nodeId, 'c' => now()]);
+    } else {
+        db_exec('DELETE FROM node_watch WHERE user_id = :u AND node_id = :n', ['u' => uid(), 'n' => (int)$nodeId]);
+    }
+}
+
+// id пользователей, подписанных на раздел или на его родителей
+function node_watchers($nodeId)
+{
+    $ids = array_map(function ($n) {
+        return (int)$n['id'];
+    }, node_path($nodeId));
+    if (!$ids) {
+        return [];
+    }
+    $in = db_in($ids, 'n');
+    return array_map('intval', array_column(db_all('SELECT DISTINCT user_id FROM node_watch WHERE node_id IN (' . $in['sql'] . ')', $in['params']), 'user_id'));
+}
+
 // ---------- Оповещения ----------
 
-// Типы: reply (ответ в отслеживаемой теме), quote, like, prefix (смена статуса), mention
+// Типы: reply (ответ в отслеживаемой теме), quote, like, prefix (смена статуса), mention, move,
+// thread (новая тема в отслеживаемом разделе), conversation, profile_post, profile_comment, profile_like, follow
 function alert_add($userId, $type, $actorId = null, $threadId = null, $postId = null, $extra = null)
 {
     $userId = (int)$userId;
@@ -513,9 +549,57 @@ function alert_text($a)
             return 'Ваша тема ' . $title . ' перенесена';
         case 'conversation':
             return $actor . ' написал(а) вам личное сообщение';
+        case 'profile_post':
+            return $actor . ' написал(а) сообщение в вашем профиле';
+        case 'profile_comment':
+            return $actor . ' прокомментировал(а) сообщение в профиле';
+        case 'profile_like':
+            return $actor . ' оценил(а) ваше сообщение в профиле';
+        case 'follow':
+            return $actor . ' подписался(ась) на вас';
+        case 'thread':
+            return $actor . ' создал(а) тему ' . $title;
         default:
             return e($a['extra'] ?? 'Новое оповещение');
     }
+}
+
+// Куда ведёт оповещение.
+// reply/quote/like/mention/prefix/move: post_id или thread_id;
+// conversation: extra = id переписки; profile_*: post_id = id сообщения стены, extra = id владельца профиля;
+// follow: actor_id.
+function alert_link($a)
+{
+    switch ($a['type']) {
+        case 'conversation':
+            return url('/forum/conversations.php', ['id' => (int)$a['extra']]);
+        case 'profile_post':
+        case 'profile_comment':
+        case 'profile_like':
+            return url('/forum/member.php', ['id' => (int)$a['extra']]) . ($a['post_id'] ? '#profile-post-' . (int)$a['post_id'] : '');
+        case 'follow':
+            return url('/forum/member.php', ['id' => (int)$a['actor_id']]);
+    }
+    if (!empty($a['post_id'])) {
+        return post_url($a['post_id']);
+    }
+    if (!empty($a['thread_id'])) {
+        return thread_url($a['thread_id']);
+    }
+    return url('/forum/alerts.php');
+}
+
+// id пользователей, которых игнорирует текущий пользователь
+function ignored_user_ids()
+{
+    static $ids = null;
+    if ($ids === null) {
+        $ids = [];
+        if (is_logged()) {
+            $ids = array_map('intval', array_column(db_all('SELECT ignored_user_id FROM user_ignores WHERE user_id = :u', ['u' => uid()]), 'ignored_user_id'));
+        }
+    }
+    return $ids;
 }
 
 function conversations_unread_count()
