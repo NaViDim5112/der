@@ -198,7 +198,7 @@ function login_user(array $u, $remember = false)
 function logout_user()
 {
     $cookie = $_COOKIE['wrp_remember'] ?? '';
-    if ($cookie && strpos($cookie, ':') !== false) {
+    if (is_string($cookie) && strpos($cookie, ':') !== false) {
         list($selector) = explode(':', $cookie, 2);
         db_exec('DELETE FROM remember_tokens WHERE selector = :s', ['s' => $selector]);
     }

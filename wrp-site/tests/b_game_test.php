@@ -1,4 +1,8 @@
 <?php
+// Только из командной строки: через браузер скрипт не запускается
+if (PHP_SAPI !== 'cli') {
+    exit;
+}
 // Проверка игровых функций на своей тестовой базе (не трогает config.php):
 //   php tests/b_game_seed.php | mysql --default-character-set=cp1251 wrp_game_test
 //   php tests/b_game_test.php

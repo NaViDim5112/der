@@ -81,6 +81,33 @@ OpenServer рассчитан на работу на своём компьюте
 - Аватары и обложки пересохраняются через GD, в папке `uploads` запрещён запуск PHP.
 - Есть ограничение попыток входа, регистрации и частоты сообщений.
 - В `config/config.php` держите `'debug' => false` на рабочем сайте.
+- На рабочий сервер не копируйте папку `tests/`, после установки удалите `public/install`.
+- Домен должен смотреть в папку `public/`. Тогда `app/`, `config/`, `sql/`, `storage/` и `tests/` из браузера недоступны.
+
+### Если вместо Apache используется Nginx
+
+Nginx не читает файлы `.htaccess`, поэтому те же запреты нужно прописать в конфиге сайта:
+
+```nginx
+root /путь/к/wrp-site/public;
+index index.php;
+
+# скрытые файлы (.htaccess, .git), кроме .well-known
+location ~ /\.(?!well-known) { deny all; }
+
+# в папке загрузок никакие скрипты не выполняются
+location ^~ /uploads/ {
+    location ~* \.(php\d?|phtml|phar|pht|phps|cgi|pl|py)(\.|$) { deny all; }
+    add_header X-Content-Type-Options nosniff;
+}
+
+location ~ \.php$ {
+    try_files $uri =404;
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    fastcgi_pass 127.0.0.1:9000;
+}
+```
 
 ## Для разработчика
 

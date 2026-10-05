@@ -350,6 +350,10 @@
 /* Кнопки в заголовке страницы (например «Создать тему») */
 .titlebar-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .titlebar-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 760px) {
+  .titlebar-head { flex-wrap: wrap; }
+  .titlebar-actions { justify-content: flex-start; }
+}
 
 @media (max-width: 420px) {
   .topbar { gap: 6px; padding: 6px 8px; }

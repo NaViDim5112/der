@@ -275,6 +275,7 @@ a.adm-tile:hover { border-color: color-mix(in srgb, var(--tc, var(--accent)) 55%
 
 /* Предпросмотр группы и префикса */
 .adm-preview-box { display: grid; gap: 10px; justify-items: start; padding: 14px; border-radius: 12px; background: var(--panel-2); border: 1px dashed var(--border-strong); }
+.adm-preview-box > * { max-width: 100%; }
 .adm-preview-box .user-banner { width: 180px; margin-top: 0; }
 .adm-preview-label { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 .adm-banner-cell .user-banner { width: 150px; margin-top: 0; }

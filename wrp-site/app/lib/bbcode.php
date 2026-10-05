@@ -20,7 +20,7 @@ function bbcode($text)
     $t = e($text);
 
     // Голые ссылки в тексте
-    $t = preg_replace_callback('~(^|[\s(])(https?://(?:(?!&quot;|&#039;|&lt;|&gt;)[^\s\[\]])+)~iu', function ($m) {
+    $t = preg_replace_callback('~(^|[\s(])(https?://(?:(?!&quot;|&#039;|&lt;|&gt;)[^\s\[\]\x02\x03<>])+)~iu', function ($m) {
         $url = $m[2];
         $tail = '';
         while ($url !== '' && preg_match('~[.,!?;:)]$~', $url)) {
@@ -58,11 +58,11 @@ function bbcode($text)
     $t = preg_replace('~\[hr\]~i', '<hr class="bb-hr">', $t);
 
     // Ссылки
-    $t = preg_replace_callback('~\[url\]((?:https?://|www\.)(?:(?!&quot;|&lt;|&gt;)[^\s\[\]])+?)\[/url\]~i', function ($m) {
+    $t = preg_replace_callback('~\[url\]((?:https?://|www\.)(?:(?!&quot;|&lt;|&gt;)[^\s\[\]\x02\x03<>])+?)\[/url\]~i', function ($m) {
         $href = stripos($m[1], 'www.') === 0 ? 'http://' . $m[1] : $m[1];
         return '<a href="' . $href . '" target="_blank" rel="nofollow ugc noopener">' . str_limit_html($m[1]) . '</a>';
     }, $t);
-    $t = preg_replace_callback('~\[url=(?:&quot;)?((?:https?://|www\.|/)(?:(?!&quot;|&lt;|&gt;)[^\s\[\]])+?)(?:&quot;)?\]((?:(?!\[url).)*?)\[/url\]~is', function ($m) {
+    $t = preg_replace_callback('~\[url=(?:&quot;)?((?:https?://|www\.|/)(?:(?!&quot;|&lt;|&gt;)[^\s\[\]\x02\x03<>])+?)(?:&quot;)?\]((?:(?!\[url).)*?)\[/url\]~is', function ($m) {
         $href = $m[1];
         if (stripos($href, 'www.') === 0) {
             $href = 'http://' . $href;
@@ -78,7 +78,7 @@ function bbcode($text)
     }, $t);
 
     // Картинки
-    $t = preg_replace('~\[img(?:=[0-9x]{1,9})?\](https?://(?:(?!&quot;|&lt;|&gt;)[^\s\[\]])+?)\[/img\]~i',
+    $t = preg_replace('~\[img(?:=[0-9x]{1,9})?\](https?://(?:(?!&quot;|&lt;|&gt;)[^\s\[\]\x02\x03<>])+?)\[/img\]~i',
         '<img class="bb-img" src="$1" alt="" loading="lazy" referrerpolicy="no-referrer">', $t);
 
     // YouTube

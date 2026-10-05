@@ -1,4 +1,8 @@
 <?php
+// Только из командной строки: через браузер скрипт не запускается
+if (PHP_SAPI !== 'cli') {
+    exit;
+}
 // SQL с тестовыми игровыми аккаунтами (cp1251), для своей тестовой базы:
 //   php tests/b_game_seed.php | mysql --default-character-set=cp1251 wrp_game_test
 $cp = function ($s) {

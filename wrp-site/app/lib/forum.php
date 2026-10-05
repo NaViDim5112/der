@@ -171,12 +171,12 @@ function node_aggregate($id)
     $last = null;
     foreach (node_subtree_ids($id) as $nid) {
         $n = node_get($nid);
-        if (!$n || $n['type'] !== 'forum') {
+        if (!$n || $n['type'] !== 'forum' || !node_can_view($n)) {
             continue;
         }
         $threads += (int)$n['thread_count'];
         $posts += (int)$n['post_count'];
-        if (node_can_view($n) && $n['last_post_at'] && (!$last || $n['last_post_at'] > $last['last_post_at'])) {
+        if ($n['last_post_at'] && (!$last || $n['last_post_at'] > $last['last_post_at'])) {
             $last = $n;
         }
     }

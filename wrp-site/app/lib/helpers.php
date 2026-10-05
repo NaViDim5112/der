@@ -95,7 +95,8 @@ function redirect($to)
 function safe_return($to, $fallback = null)
 {
     $to = (string)$to;
-    if ($to === '' || $to[0] !== '/' || str_starts_with($to, '//') || strpbrk($to, "\r\n\\") !== false) {
+    // Управляющие символы (в том числе табуляцию) браузер выбрасывает из адреса: "/\t/site" превращается в "//site"
+    if ($to === '' || $to[0] !== '/' || str_starts_with($to, '//') || strpbrk($to, "\\") !== false || preg_match('~[\x00-\x1F\x7F]~', $to)) {
         return $fallback !== null ? $fallback : url('/forum/');
     }
     return $to;

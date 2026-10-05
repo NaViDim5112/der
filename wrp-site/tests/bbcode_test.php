@@ -1,4 +1,8 @@
 <?php
+// Только из командной строки: через браузер скрипт не запускается
+if (PHP_SAPI !== 'cli') {
+    exit;
+}
 // Проверка BB-кодов: php tests/bbcode_test.php
 define('WRP_INSTALLER', true);
 require __DIR__ . '/../app/bootstrap.php';
@@ -74,6 +78,25 @@ $t = bbcode("[color=#ff0000]к[/color] [size=5]б[/size]");
 check('color size', str_contains($t, 'style="color:#ff0000"') && str_contains($t, 'bb-size-5'), $t);
 $p = bbcode_plain("[quote=A]цитата[/quote][b]Текст[/b] [img]https://a/b.png[/img] ещё");
 check('plain', $p === 'Текст ещё', $p);
+
+// Блоки [code]/[icode] и другие теги внутри адреса ссылки или картинки не попадают в атрибут
+$nested = [
+    '[url=https://a.com/[icode]x[/icode]]t[/url]',
+    '[url]https://a.com/[code]x[/code][/url]',
+    '[img]https://a.com/[icode]x[/icode][/img]',
+    'https://a.com/[icode]x[/icode]',
+    '[url=/[icode]x[/icode]]t[/url]',
+    '[url=https://a.com/[b]x[/b]]t[/url]',
+];
+foreach ($nested as $in) {
+    $out = bbcode($in);
+    $bad = preg_match('~(?:href|src)="[^"]*<~i', $out);
+    check('attr clean ' . substr($in, 0, 40), !$bad, $out);
+}
+
+// Безопасный адрес возврата
+check('safe_return tab', safe_return("/\t/example.com", '/x') === '/x');
+check('safe_return ok', safe_return('/forum/thread.php?id=1', '/x') === '/forum/thread.php?id=1');
 
 // Производительность на большом тексте
 $big = str_repeat("[b]жирный[/b] текст [i]курсив[/i] https://example.com/x [quote=A]q[/quote]\n", 600);

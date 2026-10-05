@@ -341,7 +341,7 @@ a.acc-wall-date:hover { color: var(--text); text-decoration: underline; }
 
 .acc-cabinet { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 18px; align-items: start; }
 .acc-cabinet .card + .card { margin-top: 0; }
-.acc-cab-side, .acc-cab-main { display: grid; gap: 16px; min-width: 0; }
+.acc-cab-side, .acc-cab-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; min-width: 0; }
 .acc-cab-user { padding: 0 0 14px; overflow: hidden; text-align: center; }
 .acc-cab-user .acc-preview-cover { height: 90px; }
 .acc-cab-links { display: grid; gap: 2px; padding: 0 10px; margin-top: 12px; text-align: left; }

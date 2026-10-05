@@ -323,7 +323,7 @@ if (!$alreadyInstalled && is_post()) {
             $game = isset($example['game_db']) && is_array($example['game_db']) ? $example['game_db'] : [];
             $game['enabled'] = false;
             $config['game_db'] = $game;
-            $php = "<?php\n// Настройки сайта " . str_replace(["\n", "\r", '*/'], ' ', $f['site_name']) . ". Создано установщиком " . date('d.m.Y H:i') . ".\n"
+            $php = "<?php\n// Настройки сайта " . str_replace(["\n", "\r", '*/', '?>'], ' ', $f['site_name']) . ". Создано установщиком " . date('d.m.Y H:i') . ".\n"
                 . "// Здесь пароль от базы данных - не публикуйте этот файл.\n\nreturn " . var_export($config, true) . ";\n";
             if (@file_put_contents($configFile, $php, LOCK_EX) === false) {
                 throw new RuntimeException('Не удалось записать config/config.php. Проверьте права на папку config.');
