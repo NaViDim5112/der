@@ -29,7 +29,7 @@ $launcher = trim((string)setting('launcher_url'));
 
 site_header(['active' => 'home', 'body_class' => 'page-home']);
 ?>
-<section class="hero" aria-label="<?= e($siteName) ?>">
+<section class="hero<?= ($media['videos'] || $media['custom_image']) ? ' has-media' : '' ?>" aria-label="<?= e($siteName) ?>">
   <div class="hero-media" aria-hidden="true">
     <?php if ($media['videos']): ?>
     <video autoplay muted loop playsinline preload="auto" poster="<?= e($media['image']) ?>">

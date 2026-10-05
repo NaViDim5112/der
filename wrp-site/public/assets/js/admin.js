@@ -123,6 +123,13 @@
   $$('[data-autosubmit]').forEach(function (el) {
     el.addEventListener('change', function () { if (el.form) el.form.submit(); });
   });
+  // Меню админки на телефоне - полоса с прокруткой: показываем активный пункт
+  var navList = $('.adm-nav-list');
+  var navActive = navList ? $('.adm-nav-link.active', navList) : null;
+  if (navList && navActive && navList.scrollWidth > navList.clientWidth) {
+    navList.scrollLeft = Math.max(0, navActive.offsetLeft - navList.offsetLeft - (navList.clientWidth - navActive.offsetWidth) / 2);
+  }
+
   // Быстрый выбор срока бана: +N дней от текущего времени
   document.addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-ban-days]');

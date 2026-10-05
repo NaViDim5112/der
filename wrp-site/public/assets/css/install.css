@@ -127,7 +127,9 @@
 @media (max-width: 680px) {
   .install-wrap { padding-top: 28px; }
   .install-head h1 { font-size: 21px; }
-  .install-steps li { padding: 8px 10px; font-size: 12px; gap: 8px; }
+  .install-steps { gap: 6px; }
+  .install-steps li { min-width: 0; padding: 8px; font-size: 11.5px; gap: 6px; }
+  .install-steps li span { width: 22px; height: 22px; font-size: 11px; }
   .install-card { padding: 18px 16px; }
   .install-grid, .install-links { grid-template-columns: minmax(0, 1fr); }
   .req-table td:first-child { white-space: normal; }

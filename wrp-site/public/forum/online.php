@@ -34,7 +34,8 @@ forum_header([
     <?php if ($users): ?>
     <div class="acc-grid">
       <?php foreach ($users as $u): ?>
-      <?= acc_member_card($u, '<div class="acc-mcard-foot"><span class="acc-seen' . (strtotime($u['last_activity']) > time() - 300 ? ' on' : '') . '">' . e(acc_ucfirst(fdate($u['last_activity']))) . '</span></div>') ?>
+      <?= acc_member_card($u, '<div class="acc-mcard-foot"><span class="acc-seen' . (strtotime($u['last_activity']) > time() - 300 ? ' on' : '') . '">Был(а) ' . e(acc_lcfirst(fdate($u['last_activity']))) . '</span>'
+          . (trim((string)$u['custom_title']) !== '' ? group_badge($u) : '') . '</div>') ?>
       <?php endforeach; ?>
     </div>
     <?php else: ?>

@@ -72,7 +72,7 @@ if (is_post()) {
             if (!acc_wall_can_post($mid, acc_ignored_by([$mid]))) {
                 $fail(is_banned() ? 'Пока аккаунт заблокирован, писать нельзя.' : 'Пользователь ограничил возможность писать на его стене.', 403);
             }
-            $_SESSION['acc_wall_draft'] = $body;
+            $_SESSION['acc_wall_draft'] = ['to' => $mid, 'body' => $body];
             if ($body === '') {
                 $fail('Напишите текст сообщения.');
             }
@@ -298,8 +298,11 @@ if ($tab === 'wall'):
     $total = (int)db_val('SELECT COUNT(*) FROM profile_posts WHERE profile_user_id = :u AND is_deleted = 0', ['u' => $mid]);
     $p = paginate($total, 15, $page);
     $posts = acc_wall_query('pp.profile_user_id = :u AND pp.is_deleted = 0', ['u' => $mid], $p['per_page'], $p['offset']);
-    $draft = (string)($_SESSION['acc_wall_draft'] ?? '');
-    unset($_SESSION['acc_wall_draft']);
+    $draft = '';
+    if (isset($_SESSION['acc_wall_draft']['to']) && (int)$_SESSION['acc_wall_draft']['to'] === $mid) {
+        $draft = (string)$_SESSION['acc_wall_draft']['body'];
+        unset($_SESSION['acc_wall_draft']);
+    }
 ?>
 <div class="acc-wall">
   <?php if ($canPost): ?>

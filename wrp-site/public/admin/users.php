@@ -350,7 +350,7 @@ if ($editId) {
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="save">
     <input type="hidden" name="id" value="<?= $id ?>">
-    <fieldset class="fb-preview-set"<?= $canEdit ? '' : ' disabled' ?>>
+    <fieldset class="adm-fieldset"<?= $canEdit ? '' : ' disabled' ?>>
     <div class="adm-form">
     <div class="card">
       <div class="adm-card-head"><div><h2><?= icon('user') ?> Учётная запись</h2></div></div>

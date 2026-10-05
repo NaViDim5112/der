@@ -323,7 +323,7 @@ a.adm-tile:hover { border-color: color-mix(in srgb, var(--tc, var(--accent)) 55%
 .fb-json { font-family: var(--mono); font-size: 12px; line-height: 1.5; min-height: 200px; }
 .fb-preview { display: grid; gap: 10px; }
 .fb-preview .fb-intro { padding: 12px 14px; }
-.fb-preview-set { margin: 0; padding: 0; border: 0; min-width: 0; }
+.fb-preview-set, .adm-fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
 .fb-preview-set .xf-form { pointer-events: none; }
 .fb-preview.is-loading { opacity: .6; }
 .btn-danger-text { color: #ff7a7a; }

@@ -265,7 +265,7 @@ forum_header([
   <nav class="acc-side card" aria-label="Разделы аккаунта">
     <a class="acc-side-head" href="<?= e(acc_member_url($myId)) ?>">
       <?= avatar($me, 'm') ?>
-      <span><b style="color:<?= e($me['group_color']) ?>"><?= e($me['username']) ?></b><small>Открыть профиль</small></span>
+      <span><b><?= e($me['username']) ?></b><small>Открыть профиль</small></span>
     </a>
     <div class="acc-side-title">Ваш аккаунт</div>
     <?php foreach (['profile', 'signature'] as $t): ?>

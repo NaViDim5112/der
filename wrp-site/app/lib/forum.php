@@ -106,7 +106,7 @@ function node_listed($node)
 function node_url($node)
 {
     if ($node['type'] === 'link' && $node['link_url']) {
-        return $node['link_url'];
+        return nav_link_href($node['link_url']);
     }
     if ($node['type'] === 'category') {
         return url('/forum/category.php', ['id' => (int)$node['id']]);
