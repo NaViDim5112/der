@@ -39,7 +39,7 @@ if (defined('WRP_INSTALLER')) {
 }
 
 if (empty($GLOBALS['wrp_config']['installed'])) {
-    header('Location: ' . url('/install/'));
+    header('Location: ' . detect_base_path() . '/install/');
     exit;
 }
 

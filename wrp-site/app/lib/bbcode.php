@@ -71,6 +71,9 @@ function bbcode($text)
             return $m[2];
         }
         $internal = $href[0] === '/';
+        if ($internal) {
+            $href = rtrim((string)cfg('base_path', ''), '/') . $href;
+        }
         return '<a href="' . $href . '"' . ($internal ? '' : ' target="_blank" rel="nofollow ugc noopener"') . '>' . $m[2] . '</a>';
     }, $t);
 

@@ -53,6 +53,22 @@ function url($path = '/', array $params = [])
     return $u;
 }
 
+// Путь сайта от корня домена по текущему запросу (до установки, когда base_path ещё не задан).
+// /wrp/forum/index.php при файле public/forum/index.php -> /wrp
+function detect_base_path()
+{
+    $script = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+    $file = str_replace('\\', '/', (string)realpath($_SERVER['SCRIPT_FILENAME'] ?? ''));
+    $pub = str_replace('\\', '/', (string)realpath(WRP_PUBLIC));
+    if ($file !== '' && $pub !== '' && strpos($file, $pub . '/') === 0) {
+        $rel = substr($file, strlen($pub));
+        if ($rel !== '' && substr($script, -strlen($rel)) === $rel) {
+            return rtrim(substr($script, 0, -strlen($rel)), '/');
+        }
+    }
+    return rtrim((string)cfg('base_path', ''), '/');
+}
+
 // Ссылка на файл в public/assets с версией для сброса кэша
 function asset($path)
 {
