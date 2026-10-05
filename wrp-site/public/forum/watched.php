@@ -52,16 +52,16 @@ $unwatchBtn = function ($t) {
         . '<button class="trow-action" type="submit" title="Не отслеживать">' . icon('x') . '</button></form>';
 };
 ?>
+<?php if ($total): ?>
 <div class="page-actions forum-actions">
   <?= fp_pagination($pg, '/forum/watched.php') ?>
-  <?php if ($total): ?>
   <form method="post" action="<?= e(url('/forum/watched.php')) ?>" class="inline-form" data-confirm="Перестать отслеживать все темы?">
     <?= csrf_field() ?>
     <input type="hidden" name="action" value="unwatch_all">
     <button class="btn btn-black btn-pill" type="submit"><?= icon('x') ?> Отписаться от всех</button>
   </form>
-  <?php endif; ?>
 </div>
+<?php endif; ?>
 
 <section class="block thread-list">
   <div class="trow-group">

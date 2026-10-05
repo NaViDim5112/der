@@ -46,9 +46,7 @@
 
     copy: function (text) {
       var done = function () { WRP.toast('Скопировано: ' + text); };
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(done);
-      } else {
+      var fallback = function () {
         var ta = document.createElement('textarea');
         ta.value = text;
         ta.style.position = 'fixed';
@@ -57,6 +55,11 @@
         ta.select();
         try { document.execCommand('copy'); done(); } catch (e) {}
         ta.remove();
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else {
+        fallback();
       }
     },
 
@@ -229,7 +232,10 @@
     p.innerHTML = html;
     document.body.appendChild(p);
     var r = btn.getBoundingClientRect();
-    p.style.left = (window.scrollX + r.left) + 'px';
+    // Не даём окошку уйти за правый край экрана (телефон)
+    var vw = document.documentElement.clientWidth;
+    var left = Math.max(8, Math.min(r.left, vw - p.offsetWidth - 8));
+    p.style.left = (window.scrollX + left) + 'px';
     p.style.top = (window.scrollY + r.bottom + 6) + 'px';
     p.addEventListener('click', function (ev) {
       var b = ev.target.closest('button');

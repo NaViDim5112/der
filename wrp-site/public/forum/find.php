@@ -74,15 +74,18 @@ forum_header([
   <?php endforeach; ?>
 </div>
 
+<?php $canMarkRead = $type === 'new' && is_logged() && $total; ?>
+<?php if ($pg['pages'] > 1 || $canMarkRead): ?>
 <div class="page-actions forum-actions">
   <?= fp_pagination($pg, '/forum/find.php', ['type' => $type]) ?>
-  <?php if ($type === 'new' && is_logged() && $total): ?>
+  <?php if ($canMarkRead): ?>
   <form method="post" action="<?= e(url('/forum/mark-read.php')) ?>" class="inline-form">
     <?= csrf_field() ?>
     <button class="btn btn-black btn-pill" type="submit"><?= icon('check-all') ?> Отметить всё прочитанным</button>
   </form>
   <?php endif; ?>
 </div>
+<?php endif; ?>
 
 <section class="block thread-list">
   <?php if ($threads): ?>

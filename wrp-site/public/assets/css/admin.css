@@ -55,7 +55,7 @@
 
 /* ---------- Плитки статистики ---------- */
 
-.adm-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.adm-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(max(175px, calc((100% - 25px) / 3)), 1fr)); gap: 12px; }
 .adm-tile {
   display: flex;
   align-items: center;
@@ -329,6 +329,7 @@ a.adm-tile:hover { border-color: color-mix(in srgb, var(--tc, var(--accent)) 55%
 .fb-preview.is-loading { opacity: .6; }
 .btn-danger-text { color: #ff7a7a; }
 .btn-danger-text:hover { color: #fff; background: var(--danger); }
+:root[data-theme="light"] .btn-danger-text:not(:hover) { color: #c81e1e; }
 
 /* ---------- Адаптив ---------- */
 

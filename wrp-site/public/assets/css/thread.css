@@ -490,4 +490,5 @@ dialog.modal::backdrop { background: rgba(5, 4, 10, .6); backdrop-filter: blur(3
 @media (max-width: 480px) {
   .search-opts { grid-template-columns: minmax(0, 1fr); }
   .fp-pages .page-step { padding: 0 10px; }
+  .react-picker button { width: 32px; height: 32px; font-size: 21px; }
 }

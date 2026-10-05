@@ -8,6 +8,8 @@ const ROLES = {
   roxas: 'Roxas_Alexandro:test12345',
   diego: 'Diego_Bacardi:test12345',
   admin: 'admin:admin12345',
+  ricardo: 'Ricardo_Calump:test12345',
+  martin: 'Martin_Line:test12345',
 };
 const roles = (process.argv[2] || 'guest,roxas,diego,admin').split(',');
 const LIMIT = +(process.argv[3] || 400);

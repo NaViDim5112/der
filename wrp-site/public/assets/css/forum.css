@@ -95,7 +95,7 @@
 .brand:hover { color: var(--text); }
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .user-pill { gap: 8px; padding: 0 12px 0 6px; }
-.user-pill-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+.user-pill-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; line-height: 1.4; }
 
 /* ---------- Заголовок страницы ---------- */
 
@@ -304,6 +304,11 @@
 /* ---------- Меню аккаунта ---------- */
 
 .account-menu { width: 340px; padding: 8px; }
+/* На телефоне меню аккаунта открывается на всю ширину шапки, а не от кнопки (иначе уходит за левый край) */
+@media (max-width: 560px) {
+  .topbar .dropdown { position: static; }
+  .topbar .account-menu { left: 6px; right: 6px; width: auto; max-height: calc(100vh - 90px); overflow-y: auto; }
+}
 .account-menu-tabs { display: flex; gap: 4px; padding: 4px; margin-bottom: 8px; border-radius: 10px; background: var(--panel-2); }
 .account-menu-tabs > * { padding: 6px 14px; border-radius: 8px; font-weight: 800; font-size: 13px; }
 .account-menu-tabs .active { background: var(--white-btn); color: var(--white-btn-text); }
