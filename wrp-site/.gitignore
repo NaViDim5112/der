@@ -1,0 +1,12 @@
+/config/config.php
+/storage/cache/*
+!/storage/cache/.gitkeep
+/storage/logs/*
+!/storage/logs/.gitkeep
+/public/uploads/avatars/*
+!/public/uploads/avatars/.gitkeep
+/public/assets/media/*
+!/public/assets/media/README.txt
+/storage/installed.lock
+/tests/node_modules/
+/tests/screens/
