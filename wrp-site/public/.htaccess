@@ -25,7 +25,7 @@ AddDefaultCharset UTF-8
 </IfModule>
 
 # Скрытые файлы закрыты и без mod_rewrite
-<FilesMatch "^\.">
+<FilesMatch "^\.(?!well-known)">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>

@@ -5,7 +5,7 @@ require __DIR__ . '/../../app/bootstrap.php';
 $q = mb_substr(fp_clean_title(query_str('q')), 0, 100);
 $in = query_str('in') === 'titles' ? 'titles' : 'all';
 $nodeId = query_int('node');
-$authorName = mb_substr(query_str('author'), 0, 32);
+$authorName = mb_substr(query_str('author') !== '' ? query_str('author') : query_str('user'), 0, 32);
 $prefix = query_int('prefix');
 $allPrefixes = prefixes_all();
 if ($prefix && !isset($allPrefixes[$prefix])) {

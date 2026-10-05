@@ -19,7 +19,7 @@ DirectoryIndex index.php
 </IfModule>
 
 # Без mod_rewrite закрываем хотя бы служебные файлы (README.md, *.sql, логи)
-<FilesMatch "(?i)(^\.|\.(md|sql|log|lock)$)">
+<FilesMatch "(?i)(^\.(?!well-known)|\.(md|sql|log|lock)$)">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
