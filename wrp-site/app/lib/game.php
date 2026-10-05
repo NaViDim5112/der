@@ -59,7 +59,18 @@ function game_check_password($nick, $password)
     $saltCol = (string)cfg('game_db.col_salt', '');
     $salt = $saltCol !== '' ? (string)($acc[$saltCol] ?? '') : '';
     $p = game_to_db($password);
-    switch (cfg('game_db.hash', 'bcrypt')) {
+    $mode = cfg('game_db.hash', 'auto');
+    if ($mode === 'auto') {
+        // Мод World RP: новые пароли bcrypt, старые аккаунты - SHA256 с солью (перехэшируются при входе в игру)
+        if (strpos($stored, '$2') === 0) {
+            $mode = 'bcrypt';
+        } elseif ($salt !== '') {
+            $mode = 'sha256_salt';
+        } else {
+            $mode = 'sha256';
+        }
+    }
+    switch ($mode) {
         case 'bcrypt':
             return $stored !== '' && password_verify($p, $stored);
         case 'sha256':
