@@ -69,6 +69,10 @@ function adm_modlog_target($r)
         case 'profile_comment':
             return '<span class="muted small">' . ($r['target_type'] === 'profile_post' ? 'Сообщение в профиле' : 'Комментарий в профиле') . '</span><br>#' . $id;
     }
+    $own = hook_first('modlog_target', $r);
+    if ($own !== null) {
+        return $own;
+    }
     return '<span class="muted small">' . e($r['target_type']) . '</span><br>#' . $id;
 }
 

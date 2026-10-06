@@ -17,6 +17,11 @@ if (is_post()) {
     } else {
         $u = auth_attempt($login, $password);
         if ($u) {
+            // Модуль может остановить вход (например, запросить код 2FA) и вернуть адрес следующего шага
+            $next = hook_first('login_intercept', $u, input_bool('remember'), $return);
+            if ($next !== null) {
+                redirect($next);
+            }
             login_user($u, input_bool('remember'));
             flash('success', 'С возвращением, ' . $u['username'] . '!');
             redirect($return);

@@ -80,20 +80,18 @@ function bbcode($text)
     // Картинки
     $t = preg_replace('~\[img(?:=[0-9x]{1,9})?\](https?://(?:(?!&quot;|&lt;|&gt;)[^\s\[\]\x02\x03<>])+?)\[/img\]~i',
         '<img class="bb-img" src="$1" alt="" loading="lazy" referrerpolicy="no-referrer">', $t);
+    // Свои загруженные картинки: только /uploads/attachments/ГГГГ/ММ/имя.расширение
+    $t = preg_replace_callback('~\[img(?:=[0-9x]{1,9})?\](/uploads/attachments/\d{4}/\d{2}/[a-z0-9_\-]{8,64}\.(?:jpe?g|png|gif|webp))\[/img\]~i', function ($m) {
+        return '<img class="bb-img" src="' . e(rtrim((string)cfg('base_path', ''), '/') . $m[1]) . '" alt="" loading="lazy">';
+    }, $t);
 
-    // YouTube
-    $t = preg_replace_callback('~\[(youtube|media)(?:=youtube)?\](.*?)\[/\1\]~is', function ($m) {
-        $v = trim(html_entity_decode($m[2], ENT_QUOTES, 'UTF-8'));
-        $id = '';
-        if (preg_match('~^[A-Za-z0-9_\-]{11}$~', $v)) {
-            $id = $v;
-        } elseif (preg_match('~(?:youtube\.com/(?:watch\?(?:.*&)?v=|shorts/|embed/)|youtu\.be/)([A-Za-z0-9_\-]{11})~', $v, $mm)) {
-            $id = $mm[1];
-        }
-        if ($id === '') {
+    // Видео: YouTube, VK Видео, Rutube, Twitch
+    $t = preg_replace_callback('~\[(youtube|media)(?:=[a-z]{2,10})?\](.*?)\[/\1\]~is', function ($m) {
+        $src = bb_media_src(trim(html_entity_decode($m[2], ENT_QUOTES, 'UTF-8')));
+        if ($src === '') {
             return $m[0];
         }
-        return '<div class="bb-video"><iframe src="https://www.youtube-nocookie.com/embed/' . $id . '" loading="lazy" allowfullscreen allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"></iframe></div>';
+        return '<div class="bb-video"><iframe src="' . e($src) . '" loading="lazy" allowfullscreen allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe></div>';
     }, $t);
 
     // Упоминание [user=5]Ник[/user]
@@ -173,12 +171,50 @@ function bbcode($text)
     $t = preg_replace('~<br>(\s*</' . $block . '>)~i', '$1', $t);
     $t = preg_replace('~<br>(\s*<(?:ul|ol|table|blockquote|details|div)\b)~i', '$1', $t);
 
+    // Модули ([attach=N] и т.п.): текст здесь уже экранирован, свои вставки модуль обязан экранировать сам
+    $t = hook_filter('bbcode_html', $t);
+
     // Возвращаем блоки кода
     $t = preg_replace_callback("~\x02(\d+)\x03~", function ($m) use ($blocks) {
         return $blocks[(int)$m[1]] ?? '';
     }, $t);
 
     return $t;
+}
+
+// Адрес плеера для [media]: YouTube, VK Видео, Rutube, Twitch. Пусто - ссылка не поддерживается.
+function bb_media_src($v)
+{
+    $v = (string)$v;
+    if (preg_match('~^[A-Za-z0-9_\-]{11}$~', $v)) {
+        return 'https://www.youtube-nocookie.com/embed/' . $v;
+    }
+    if (preg_match('~^https?://(?:www\.|m\.)?(?:youtube\.com/(?:watch\?(?:[^#\s]*&)?v=|shorts/|embed/|live/)|youtu\.be/)([A-Za-z0-9_\-]{11})~i', $v, $mm)) {
+        return 'https://www.youtube-nocookie.com/embed/' . $mm[1];
+    }
+    // VK: vk.com/video-123_456, vkvideo.ru/video-123_456, vk.com/clip-123_456, ...?z=video-123_456
+    if (preg_match('~^https?://(?:www\.|m\.)?(?:vk\.com|vk\.ru|vkvideo\.ru)/(?:[^\s]*?[/=])?(?:video|clip)(-?\d{1,12})_(\d{1,12})~i', $v, $mm)) {
+        return 'https://vk.com/video_ext.php?oid=' . $mm[1] . '&id=' . $mm[2] . '&hd=2';
+    }
+    // Rutube: rutube.ru/video/<32 символа>/, rutube.ru/shorts/<id>/
+    if (preg_match('~^https?://(?:www\.)?rutube\.ru/(?:video|shorts|play/embed)/([a-f0-9]{32})~i', $v, $mm)) {
+        return 'https://rutube.ru/play/embed/' . strtolower($mm[1]);
+    }
+    // Twitch: записи, клипы и каналы. Плееру нужен адрес нашего сайта (parent).
+    $host = strtolower(preg_replace('~:\d+$~', '', (string)($_SERVER['HTTP_HOST'] ?? 'localhost')));
+    if (!preg_match('~^[a-z0-9.\-]{1,253}$~', $host)) {
+        $host = 'localhost';
+    }
+    if (preg_match('~^https?://(?:www\.|m\.)?twitch\.tv/videos/(\d{1,15})~i', $v, $mm)) {
+        return 'https://player.twitch.tv/?video=v' . $mm[1] . '&parent=' . $host . '&autoplay=false';
+    }
+    if (preg_match('~^https?://(?:clips\.twitch\.tv/|(?:www\.)?twitch\.tv/[A-Za-z0-9_]{1,25}/clip/)([A-Za-z0-9_\-]{1,100})~i', $v, $mm)) {
+        return 'https://clips.twitch.tv/embed?clip=' . $mm[1] . '&parent=' . $host . '&autoplay=false';
+    }
+    if (preg_match('~^https?://(?:www\.|m\.)?twitch\.tv/([A-Za-z0-9_]{3,25})/?$~i', $v, $mm)) {
+        return 'https://player.twitch.tv/?channel=' . strtolower($mm[1]) . '&parent=' . $host . '&autoplay=false';
+    }
+    return '';
 }
 
 // Укорачивает длинный текст ссылки (текст уже экранирован)

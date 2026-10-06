@@ -808,6 +808,7 @@ function acc_wall_render(array $posts, array $opts = [])
         if ($canDelete) {
             $inner .= acc_delete_button('wall_delete', $pid, $ownerId, $return !== '' ? $return : acc_member_url($ownerId), 'Удалить это сообщение вместе с комментариями?');
         }
+        $inner .= hook_html('wall_post_actions', $p, $ownerId);
         $inner .= '</div>';
         $inner .= '<div class="acc-likes-line" data-likes="post-' . $pid . '"' . ($pLikers ? '' : ' hidden') . '>' . acc_likes_line($pLikers) . '</div>';
 
@@ -857,6 +858,7 @@ function acc_comment_render(array $c, $ownerId, $postAuthorId, array $likers, $r
     if ($canDelete) {
         $h .= acc_delete_button('comment_delete', $cid, $ownerId, $return, 'Удалить этот комментарий?');
     }
+    $h .= hook_html('wall_comment_actions', $c, $ownerId);
     $h .= '</div>';
     $h .= '<div class="acc-likes-line" data-likes="comment-' . $cid . '"' . ($likers ? '' : ' hidden') . '>' . acc_likes_line($likers) . '</div>';
     $h .= '</div></div>';

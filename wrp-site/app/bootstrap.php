@@ -29,8 +29,13 @@ if (!empty($GLOBALS['wrp_config']['debug'])) {
     ini_set('error_log', WRP_STORAGE . '/logs/php-error.log');
 }
 
+// Сначала точки расширения (ими пользуются модули), затем библиотека, затем модули
+require_once WRP_APP . '/lib/hooks.php';
 foreach (glob(WRP_APP . '/lib/*.php') as $lib) {
     require_once $lib;
+}
+foreach (glob(WRP_APP . '/modules/*.php') ?: [] as $mod) {
+    require_once $mod;
 }
 
 // Страница установщика подключает только функции, без сессии и базы

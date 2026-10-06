@@ -43,7 +43,7 @@ function setting($key, $default = null)
         return null;
     }
     if ($cache === null) {
-        $cache = settings_defaults();
+        $cache = hook_filter('settings_defaults', settings_defaults());
         try {
             foreach (db_all('SELECT k, v FROM settings') as $row) {
                 $cache[$row['k']] = $row['v'];

@@ -6,7 +6,12 @@
 // Пункты меню админки: ключ => [название, иконка, адрес]
 function adm_menu_items()
 {
-    return [
+    static $items = null;
+    if ($items !== null) {
+        return $items;
+    }
+    // Модули добавляют свои пункты: hook_add('admin_menu', function ($items) { $items['x'] = [...]; return $items; });
+    return $items = hook_filter('admin_menu', [
         'index' => ['Обзор', 'monitor', '/admin/'],
         'settings' => ['Настройки', 'settings', '/admin/settings.php'],
         'nodes' => ['Разделы форума', 'folder', '/admin/nodes.php'],
@@ -16,7 +21,7 @@ function adm_menu_items()
         'nav' => ['Меню слева', 'list', '/admin/nav.php'],
         'wiki' => ['База знаний', 'book', '/admin/wiki.php'],
         'modlog' => ['Журнал модерации', 'clock', '/admin/modlog.php'],
-    ];
+    ]);
 }
 
 function admin_header($title, $active, $crumbs = [], array $opts = [])
@@ -424,7 +429,8 @@ function adm_action_labels()
         'edit' => 'Изменение',
         'ban' => 'Блокировка',
         'unban' => 'Снятие блокировки',
-    ];
+        'db_migrate' => 'Обновление базы сайта',
+    ] + (array)hook_filter('modlog_labels', []);
 }
 
 function adm_action_label($action)

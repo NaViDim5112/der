@@ -560,7 +560,9 @@ function alert_text($a)
         case 'thread':
             return $actor . ' создал(а) тему ' . $title;
         default:
-            return e($a['extra'] ?? 'Новое оповещение');
+            // Модули: hook_add('alert_text', function ($text, $a, $actor, $title) { return $a['type'] === 'warning' ? '...' : $text; });
+            $own = hook_filter('alert_text', null, $a, $actor, $title);
+            return $own !== null ? $own : e($a['extra'] ?? 'Новое оповещение');
     }
 }
 
@@ -579,6 +581,10 @@ function alert_link($a)
             return url('/forum/member.php', ['id' => (int)$a['extra']]) . ($a['post_id'] ? '#profile-post-' . (int)$a['post_id'] : '');
         case 'follow':
             return url('/forum/member.php', ['id' => (int)$a['actor_id']]);
+    }
+    $own = hook_filter('alert_link', null, $a);
+    if ($own !== null) {
+        return $own;
     }
     if (!empty($a['post_id'])) {
         return post_url($a['post_id']);

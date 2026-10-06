@@ -2,6 +2,26 @@
 require __DIR__ . '/../../app/bootstrap.php';
 require_admin();
 
+// Обновление базы сайта (новые файлы sql/migrations)
+if (is_post() && input('action') === 'migrate') {
+    csrf_check();
+    try {
+        $done = migrations_run();
+        flash('success', $done ? 'База обновлена: ' . implode(', ', $done) . '.' : 'Обновлений нет, база уже актуальна.');
+        mod_log('db_migrate', 'site', 0, $done ? implode(', ', $done) : 'нет обновлений');
+    } catch (Exception $ex) {
+        error_log((string)$ex);
+        flash('error', 'Обновление не применено: ' . $ex->getMessage());
+    }
+    redirect(url('/admin/'));
+}
+$pending = [];
+try {
+    $pending = array_keys(migrations_pending(db()));
+} catch (Exception $ex) {
+    $pending = ['?'];
+}
+
 $stats = forum_stats();
 $today = date('Y-m-d 00:00:00');
 $regToday = (int)db_val('SELECT COUNT(*) FROM users WHERE created_at >= :d', ['d' => $today]);
@@ -72,7 +92,24 @@ $tiles = [
 if ($profilePosts !== null) {
     $tiles[] = ['Сообщений в профилях', $profilePosts, 'edit', '#f59e0b', url('/forum/profile-posts.php')];
 }
+// Модули добавляют плитки: [название, число, иконка, цвет, ссылка]
+$tiles = hook_filter('admin_tiles', $tiles);
 ?>
+<?php if ($pending): ?>
+<div class="card adm-update">
+  <div class="adm-card-head">
+    <div>
+      <h2><?= icon('alert') ?> Нужно обновить базу сайта</h2>
+      <p>Появились новые функции форума, для них нужны изменения в базе: <?= e(implode(', ', $pending)) ?>. Перед обновлением лучше сделать копию базы (OpenServer - phpMyAdmin / Adminer - Экспорт).</p>
+    </div>
+    <form method="post" action="<?= e(url('/admin/')) ?>">
+      <?= csrf_field() ?>
+      <input type="hidden" name="action" value="migrate">
+      <button class="btn btn-accent" type="submit"><?= icon('check') ?> Обновить базу</button>
+    </form>
+  </div>
+</div>
+<?php endif; ?>
 <div class="adm-tiles">
   <?php foreach ($tiles as $t): ?>
   <a class="adm-tile" href="<?= e($t[4]) ?>" style="--tc:<?= e($t[3]) ?>">
@@ -179,6 +216,8 @@ if ($profilePosts !== null) {
     <?php endif; ?>
   </div>
 </div>
+
+<?= hook_html('admin_dashboard') ?>
 
 <div class="card">
   <div class="adm-card-head">

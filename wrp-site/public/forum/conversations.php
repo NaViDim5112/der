@@ -290,6 +290,7 @@ if ($convId) {
           <a href="#msg-<?= (int)$msg['id'] ?>">#<?= $num ?></a>
         </div>
         <?= acc_ignored_wrap($body, $msg['user_id']) ?>
+        <?= hook_html('conversation_message_actions', $msg, $convId) ?>
       </div>
     </article>
     <?php endforeach; ?>

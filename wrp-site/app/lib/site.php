@@ -230,6 +230,7 @@ function site_header(array $o = [])
 <link rel="stylesheet" href="<?= e(asset('css/' . $css)) ?>">
 <?php endforeach; ?>
 <script>document.documentElement.classList.add('js');</script>
+<?= hook_html('page_head', 'site', $o) ?>
 </head>
 <body class="layout-site <?= e($o['body_class'] ?? '') ?>">
 <a class="skip-link" href="#content">Перейти к содержимому</a>
@@ -284,6 +285,7 @@ function site_footer()
     $rules = site_setting_node('rules_node_id');
     $tech = site_setting_node('tech_node_id');
     $srv = site_server_info();
+    cron_maybe_run();
     ?>
 </main>
 <footer class="site-footer">
@@ -338,6 +340,7 @@ function site_footer()
 <?php foreach ($o['js'] ?? [] as $js): ?>
 <script src="<?= e(asset('js/' . $js)) ?>"></script>
 <?php endforeach; ?>
+<?= hook_html('page_scripts', 'site', $o) ?>
 </body>
 </html>
 <?php

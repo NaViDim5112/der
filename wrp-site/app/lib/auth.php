@@ -187,12 +187,13 @@ function login_user(array $u, $remember = false)
     session_regenerate_id(true);
     $_SESSION['uid'] = (int)$u['id'];
     $_SESSION['pw'] = substr(hash('sha256', $u['password_hash']), 0, 16);
-    unset($_SESSION['csrf']);
+    unset($_SESSION['csrf'], $_SESSION['touch'], $_SESSION['loc']);
     db_update('users', ['last_activity' => now(), 'last_ip' => client_ip()], 'id = :id', ['id' => (int)$u['id']]);
     if ($remember) {
         remember_issue((int)$u['id']);
     }
     $GLOBALS['wrp_user'] = user_by_id($u['id']);
+    hook_fire('user_logged_in', $GLOBALS['wrp_user']);
 }
 
 function logout_user()
@@ -301,7 +302,8 @@ function online_touch()
         return;
     }
     $_SESSION['touch'] = time();
-    $sid = hash('sha256', session_id() . '|' . cfg('secret'));
+    unset($_SESSION['loc']);
+    $sid = online_sid();
     $uid = uid() ?: null;
     db_exec('INSERT INTO online (sid, user_id, last_activity) VALUES (:s, :u, :t)
              ON DUPLICATE KEY UPDATE user_id = VALUES(user_id), last_activity = VALUES(last_activity)',
@@ -313,6 +315,40 @@ function online_touch()
         db_exec('DELETE FROM online WHERE last_activity < :t', ['t' => date('Y-m-d H:i:s', time() - 1800)]);
         db_exec('DELETE FROM rate_limits WHERE created_at < :t', ['t' => date('Y-m-d H:i:s', time() - 86400)]);
         db_exec('DELETE FROM remember_tokens WHERE expires_at < :t', ['t' => now()]);
+    }
+}
+
+function online_sid()
+{
+    return hash('sha256', session_id() . '|' . cfg('secret'));
+}
+
+// Где сейчас посетитель (для «Сейчас на форуме»): адрес страницы без base_path.
+// Пишется только при смене страницы, только для GET.
+function online_set_location($loc = null)
+{
+    if (PHP_SAPI === 'cli' || ($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET' || session_status() !== PHP_SESSION_ACTIVE) {
+        return;
+    }
+    if ($loc === null) {
+        $loc = (string)($_SERVER['REQUEST_URI'] ?? '/');
+        $base = rtrim((string)cfg('base_path', ''), '/');
+        if ($base !== '' && strpos($loc, $base . '/') === 0) {
+            $loc = substr($loc, strlen($base));
+        }
+    }
+    $loc = mb_substr((string)$loc, 0, 255);
+    if (($_SESSION['loc'] ?? null) === $loc) {
+        return;
+    }
+    $_SESSION['loc'] = $loc;
+    try {
+        db_exec('UPDATE online SET location = :l WHERE sid = :s', ['l' => $loc, 's' => online_sid()]);
+        if (uid()) {
+            db_exec('UPDATE users SET last_location = :l WHERE id = :id', ['l' => $loc, 'id' => uid()]);
+        }
+    } catch (Throwable $e) {
+        // база ещё не обновлена (нет колонки location) - не мешаем странице
     }
 }
 
@@ -370,7 +406,8 @@ function group_badge($u)
 // Баллы пользователя: темы x3 + сообщения + реакции x2
 function user_points($u)
 {
-    return (int)($u['threads_count'] ?? 0) * 3 + (int)($u['posts_count'] ?? 0) + (int)($u['likes_received'] ?? 0) * 2;
+    $base = (int)($u['threads_count'] ?? 0) * 3 + (int)($u['posts_count'] ?? 0) + (int)($u['likes_received'] ?? 0) * 2;
+    return (int)hook_filter('user_points', $base, $u);
 }
 
 // Обложка профиля (url или пусто)

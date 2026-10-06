@@ -184,6 +184,8 @@ if (is_post()) {
             break;
 
         default:
+            // Модуль обрабатывает своё действие сам и делает redirect / json_out
+            hook_fire('member_action', $action, $m, $fail, $return);
             $fail('Неизвестное действие.');
     }
 }
@@ -195,6 +197,7 @@ $tab = query_str('tab', 'wall');
 if ($tab === 'threads') {
     $tabs['threads'] = 'Темы';
 }
+$tabs = hook_filter('member_tabs', $tabs, $m, $tab);
 if (!isset($tabs[$tab])) {
     $tab = 'wall';
 }
@@ -232,6 +235,7 @@ forum_header([
       <div class="acc-profile-status">«<?= e($m['status_text']) ?>»</div>
       <?php endif; ?>
       <div class="acc-banners"><?= user_banners($m) ?></div>
+      <?= hook_html('member_cover', $m) ?>
     </div>
     <div class="acc-cover-strip">
       <span><?= e(acc_user_title($m)) ?><?php if (trim((string)$m['location']) !== ''): ?> · Из <?= e($m['location']) ?><?php endif; ?></span>
@@ -278,6 +282,7 @@ forum_header([
       <?php if (is_logged() && !$isSelf && !is_banned()): ?>
       <a class="btn btn-pill btn-outline" href="<?= e(url('/forum/conversations.php', ['new' => 1, 'to' => $m['username']])) ?>"><?= icon('mail') ?> Написать</a>
       <?php endif; ?>
+      <?= hook_html('member_actions', $m, $isSelf) ?>
       <?php if (can_admin()): ?>
       <a class="btn btn-pill btn-outline" href="<?= e(url('/admin/users.php', ['edit' => $mid])) ?>"><?= icon('shield') ?> Управление</a>
       <?php endif; ?>
@@ -291,9 +296,15 @@ forum_header([
   <?php endforeach; ?>
 </nav>
 
+<?= hook_html('member_before_tabs', $m, $tab) ?>
 <?php
+// ---------- Вкладки модулей ----------
+$customTab = in_array($tab, ['wall', 'activity', 'posts', 'threads', 'about'], true) ? '' : hook_html('member_tab_content', $tab, $m, $page);
+if ($customTab !== ''):
+    echo $customTab;
+
 // ---------- Сообщения профиля ----------
-if ($tab === 'wall'):
+elseif ($tab === 'wall'):
     $canPost = acc_wall_can_post($mid, acc_ignored_by([$mid]));
     $total = (int)db_val('SELECT COUNT(*) FROM profile_posts WHERE profile_user_id = :u AND is_deleted = 0', ['u' => $mid]);
     $p = paginate($total, 15, $page);
@@ -462,6 +473,7 @@ else:
       <div class="muted">Подпись не задана.</div>
       <?php endif; ?>
     </section>
+    <?= hook_html('member_about_main', $m) ?>
   </div>
   <aside class="acc-about-side">
     <section class="card">
@@ -475,9 +487,11 @@ else:
         <dt>Сообщения</dt><dd><?= num($m['posts_count']) ?></dd>
         <dt>Реакции</dt><dd><?= num($m['likes_received']) ?></dd>
         <dt>Баллы</dt><dd><?= num(user_points($m)) ?></dd>
+        <?= hook_html('member_info_rows', $m) ?>
       </dl>
       <div class="acc-groups"><?= acc_group_badges($m) ?></div>
     </section>
+    <?= hook_html('member_about_side', $m) ?>
     <section class="card">
       <h3 class="acc-card-title">Подписчики <span class="muted"><?= num($fc['followers']) ?></span></h3>
       <?php if ($followersList): ?>

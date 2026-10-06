@@ -11,6 +11,9 @@ $tabs = [
     'following' => ['Подписки', 'users'],
     'ignored' => ['Игнорирование', 'eye-off'],
 ];
+// Модули добавляют свои вкладки: ['ключ' => ['Название', 'иконка']]
+$tabs = hook_filter('account_tabs', $tabs, user());
+$baseTabs = ['profile', 'signature', 'security', 'following', 'ignored'];
 $tab = query_str('tab', 'profile');
 if (!isset($tabs[$tab])) {
     $tab = 'profile';
@@ -246,6 +249,8 @@ if (is_post()) {
             break;
 
         default:
+            // Модуль обрабатывает своё действие сам и делает redirect
+            hook_fire('account_action', $action, $tab, $me);
             abort(400, 'Неизвестное действие.');
     }
 }
@@ -272,7 +277,7 @@ forum_header([
     <a class="acc-side-link<?= $tab === $t ? ' active' : '' ?>" href="<?= e($tabUrl($t)) ?>"><?= icon($tabs[$t][1]) ?><span><?= e($tabs[$t][0]) ?></span></a>
     <?php endforeach; ?>
     <div class="acc-side-title">Настройки</div>
-    <?php foreach (['security', 'following', 'ignored'] as $t): ?>
+    <?php foreach (array_merge(['security', 'following', 'ignored'], array_values(array_diff(array_keys($tabs), $baseTabs))) as $t): ?>
     <a class="acc-side-link<?= $tab === $t ? ' active' : '' ?>" href="<?= e($tabUrl($t)) ?>"><?= icon($tabs[$t][1]) ?><span><?= e($tabs[$t][0]) ?></span></a>
     <?php endforeach; ?>
     <div class="acc-side-title">Прочее</div>
@@ -555,6 +560,8 @@ forum_header([
       <div class="empty"><?= icon('eye') ?><div>Вы никого не игнорируете.</div></div>
       <?php endif; ?>
     </section>
+<?php else: ?>
+    <?= hook_html('account_tab_content', $tab, $me) ?>
 <?php endif; ?>
   </div>
 </div>

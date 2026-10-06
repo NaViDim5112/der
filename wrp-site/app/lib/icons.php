@@ -3,7 +3,12 @@
 
 function icon_paths()
 {
-    return [
+    static $paths = null;
+    if ($paths !== null) {
+        return $paths;
+    }
+    // Модули добавляют свои иконки: hook_add('icon_paths', function ($p) { $p['x'] = '<path d="..."/>'; return $p; });
+    return $paths = hook_filter('icon_paths', [
         'home' => '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/>',
         'chats' => '<path d="M14 9a2 2 0 0 1-2 2H6l-3 3V4a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2z"/><path d="M18 9h1a2 2 0 0 1 2 2v11l-3-3h-6a2 2 0 0 1-2-2v-1"/>',
         'chat' => '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
@@ -108,7 +113,7 @@ function icon_paths()
         'map' => '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/>',
         'monitor' => '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
         'wifi' => '<path d="M5 13a10 10 0 0 1 14 0M8.5 16.5a5 5 0 0 1 7 0M2 8.82a15 15 0 0 1 20 0M12 20h.01"/>',
-    ];
+    ]);
 }
 
 // icon('home') -> <svg ...>

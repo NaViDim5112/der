@@ -25,6 +25,7 @@ function forum_header(array $o = [])
     $wide = ($_COOKIE['wrp_wide'] ?? '') === '1';
     $u = user();
     $crumbs = $o['crumbs'] ?? [];
+    online_set_location($o['location'] ?? null);
     ?>
 <!doctype html>
 <html lang="ru" data-theme="<?= theme_attr() ?>"<?= $wide ? ' class="is-wide"' : '' ?>>
@@ -44,6 +45,7 @@ function forum_header(array $o = [])
 <?php foreach ($o['css'] ?? [] as $css): ?>
 <link rel="stylesheet" href="<?= e(asset('css/' . $css)) ?>">
 <?php endforeach; ?>
+<?= hook_html('page_head', 'forum', $o) ?>
 </head>
 <body class="layout-forum <?= e($o['body_class'] ?? '') ?>">
 <div class="bg-glow" aria-hidden="true"></div>
@@ -73,6 +75,7 @@ function forum_header(array $o = [])
       </div>
     </div>
     <a class="side-link<?= $nav === 'wiki' ? ' active' : '' ?>" href="<?= e(url('/wiki/')) ?>"><?= icon('help') ?><span>База знаний</span></a>
+    <?= hook_html('sidebar_links', $nav) ?>
     <?php foreach (nav_links() as $l): ?>
     <a class="side-link<?= $nav === 'link-' . $l['id'] ? ' active' : '' ?>" href="<?= e(nav_link_href($l['url'])) ?>"<?= $l['new_tab'] ? ' target="_blank" rel="noopener"' : '' ?>><?= icon($l['icon']) ?><span><?= e($l['title']) ?></span></a>
     <?php endforeach; ?>
@@ -104,6 +107,7 @@ function forum_header(array $o = [])
       </div>
     </div>
     <a class="side-link" href="<?= e(url('/forum/search.php')) ?>"><?= icon('search') ?><span>Поиск сообщений</span></a>
+    <?= hook_html('sidebar_user_links', $nav, $u) ?>
     <form method="post" action="<?= e(url('/forum/mark-read.php')) ?>" class="side-form">
       <?= csrf_field() ?>
       <button class="side-link" type="submit"><?= icon('eye-off') ?><span>Прочитать всё</span></button>
@@ -143,6 +147,7 @@ function forum_header(array $o = [])
                 <a href="<?= e(url('/forum/alerts.php')) ?>">Оповещения</a>
                 <a href="<?= e(url('/forum/find.php', ['type' => 'mine'])) ?>">Ваши публикации</a>
                 <a href="<?= e(url('/forum/watched.php')) ?>">Отслеживаемые темы</a>
+                <?= hook_html('account_menu_links', $u) ?>
               </div>
               <div class="account-menu-links">
                 <a href="<?= e(url('/forum/account.php', ['tab' => 'profile'])) ?>">Информация</a>
@@ -150,6 +155,7 @@ function forum_header(array $o = [])
                 <a href="<?= e(url('/forum/account.php', ['tab' => 'security'])) ?>">Безопасность</a>
                 <a href="<?= e(url('/forum/account.php', ['tab' => 'following'])) ?>">Подписки</a>
                 <a href="<?= e(url('/forum/account.php', ['tab' => 'ignored'])) ?>">Игнорирование</a>
+                <?= hook_html('account_menu_settings', $u) ?>
                 <a href="<?= e(url('/forum/conversations.php')) ?>">Личные сообщения</a>
                 <a href="<?= e(url('/cabinet/')) ?>">Личный кабинет</a>
                 <?php if (can_admin()): ?><a href="<?= e(url('/admin/')) ?>">Админ-панель</a><?php endif; ?>
@@ -165,6 +171,7 @@ function forum_header(array $o = [])
               </form>
             </div>
           </div>
+          <?= hook_html('header_icons', $u) ?>
           <a class="btn btn-ghost btn-icon" href="<?= e(url('/forum/conversations.php')) ?>" title="Личные сообщения"><?= icon('mail') ?><?= $convs ? '<span class="count-badge">' . $convs . '</span>' : '' ?></a>
           <a class="btn btn-ghost btn-icon" href="<?= e(url('/forum/alerts.php')) ?>" title="Оповещения"><?= icon('bell') ?><?= $alerts ? '<span class="count-badge">' . $alerts . '</span>' : '' ?></a>
         </div>
@@ -203,6 +210,7 @@ function forum_header(array $o = [])
     <?php if (is_banned()): ?>
     <div class="flash flash-error"><?= icon('ban') ?><div>Ваш аккаунт заблокирован<?= user()['ban_until'] ? ' до ' . e(fdate(user()['ban_until'])) : '' ?>. <?= user()['ban_reason'] ? 'Причина: ' . e(user()['ban_reason']) : '' ?></div></div>
     <?php endif; ?>
+    <?= hook_html('page_notices', 'forum', $o) ?>
     <?php foreach (flashes() as $f): ?>
     <div class="flash flash-<?= e($f['type']) ?>"><?= icon($f['type'] === 'success' ? 'check' : ($f['type'] === 'error' ? 'alert' : 'info')) ?><div><?= e($f['message']) ?></div></div>
     <?php endforeach; ?>
@@ -216,6 +224,7 @@ function forum_footer()
 {
     $o = $GLOBALS['wrp_layout'] ?? [];
     $right = $o['right'] ?? true;
+    cron_maybe_run();
     ?>
       </main>
       <?php if ($right): ?>
@@ -242,10 +251,12 @@ function forum_footer()
   <button type="button" data-scroll="up" aria-label="Наверх"><?= icon('chevron-up') ?></button>
   <button type="button" data-scroll="down" aria-label="Вниз"><?= icon('chevron-down') ?></button>
 </div>
+<?= hook_html('page_footer', 'forum', $o) ?>
 <script src="<?= e(asset('js/app.js')) ?>"></script>
 <?php foreach ($o['js'] ?? [] as $js): ?>
 <script src="<?= e(asset('js/' . $js)) ?>"></script>
 <?php endforeach; ?>
+<?= hook_html('page_scripts', 'forum', $o) ?>
 </body>
 </html>
 <?php
@@ -298,6 +309,7 @@ function forum_right_widgets()
       </div>
     </div>
     <?php endif;
+    echo hook_html('right_widgets_top', $u);
 
     $quick = quick_nav_nodes();
     if ($quick): ?>
@@ -327,6 +339,7 @@ function forum_right_widgets()
       <button class="btn btn-ghost btn-sm btn-block" type="button" data-copy="<?= e(server_address()) ?>"><?= icon('copy') ?> <?= e(server_address()) ?></button>
     </div>
     <?php
+    echo hook_html('right_widgets_middle', $u);
     $on = online_list(); ?>
     <div class="widget">
       <h3 class="widget-title"><a href="<?= e(url('/forum/online.php')) ?>">Пользователи онлайн</a></h3>
@@ -351,6 +364,7 @@ function forum_right_widgets()
       </dl>
     </div>
     <?php
+    echo hook_html('right_widgets_bottom', $u);
 }
 
 function server_address()

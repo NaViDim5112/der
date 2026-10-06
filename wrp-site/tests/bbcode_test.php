@@ -66,6 +66,25 @@ $t = bbcode("смотри https://a.com/page, ок");
 check('autolink', str_contains($t, '<a href="https://a.com/page"') && str_contains($t, '</a>, ок'), $t);
 $t = bbcode("[media]https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10[/media]");
 check('youtube', str_contains($t, 'youtube-nocookie.com/embed/dQw4w9WgXcQ'), $t);
+$t = bbcode("[media]https://vkvideo.ru/video-123456_789012[/media]");
+check('vk video', str_contains($t, 'src="https://vk.com/video_ext.php?oid=-123456&amp;id=789012&amp;hd=2"'), $t);
+$t = bbcode("[media]https://vk.com/videos-1?z=video-55_66%2Fpl[/media]");
+check('vk video z', str_contains($t, 'oid=-55&amp;id=66'), $t);
+$t = bbcode("[media]https://rutube.ru/video/0123456789abcdef0123456789abcdef/[/media]");
+check('rutube', str_contains($t, 'src="https://rutube.ru/play/embed/0123456789abcdef0123456789abcdef"'), $t);
+$t = bbcode("[media]https://www.twitch.tv/videos/123456[/media]");
+check('twitch video', str_contains($t, 'player.twitch.tv/?video=v123456&amp;parent='), $t);
+$t = bbcode("[media]https://www.twitch.tv/worldrp[/media]");
+check('twitch channel', str_contains($t, '?channel=worldrp&amp;parent='), $t);
+$t = bbcode("[media]https://evil.com/video-1_2[/media]");
+check('media unknown', !str_contains($t, '<iframe'), $t);
+$t = bbcode("[media]https://rutube.ru/video/0123456789abcdef0123456789abcdef\"onload=alert(1)[/media]");
+check('media attr', !preg_match('~<iframe[^>]*onload~i', $t), $t);
+$t = bbcode("[img]/uploads/attachments/2026/10/a1b2c3d4e5f6.png[/img]");
+check('img attach', str_contains($t, '<img class="bb-img" src="/uploads/attachments/2026/10/a1b2c3d4e5f6.png"'), $t);
+foreach (['[img]/uploads/attachments/2026/10/../../x.png[/img]', '[img]//evil.com/a.png[/img]', '[img]/uploads/avatars/1.png[/img]', '[img]/uploads/attachments/2026/10/abcdefgh.php[/img]'] as $in) {
+    check('img internal deny ' . $in, !str_contains(bbcode($in), '<img'), bbcode($in));
+}
 $t = bbcode("строка1\nстрока2\n[center]ц[/center]\nпосле");
 check('newlines', str_contains($t, 'строка1<br>') && !str_contains($t, '</div><br>'), $t);
 $t = bbcode("[code]a\n  [b]b[/b][/code]");
