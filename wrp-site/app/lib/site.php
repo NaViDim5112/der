@@ -274,6 +274,7 @@ function site_header(array $o = [])
 </div>
 <?php endif; ?>
 <main id="content" class="site-main">
+<?= hook_html('page_notices', 'site', $o) ?>
 <?php
 }
 
