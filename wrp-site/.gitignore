@@ -12,3 +12,5 @@
 /tests/screens/
 /public/uploads/covers/*
 !/public/uploads/covers/.gitkeep
+/public/uploads/attachments/*
+!/public/uploads/attachments/.gitkeep
