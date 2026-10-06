@@ -169,6 +169,42 @@ function wf_can_process($node)
     return in_array((int)$node['id'], wf_my_staff_nodes(), true);
 }
 
+// Отвод: свою тему не рассматривают, а жалобу - и тот, чей ник (Имя_Фамилия) в ней упомянут
+// (жалоба на него, он свидетель или участник). $u - строка пользователя, по умолчанию текущий.
+function wf_recused(array $thread, $u = null)
+{
+    $u = $u ?: user();
+    if (!$u) {
+        return true;
+    }
+    if ((int)$thread['user_id'] === (int)$u['id']) {
+        return true;
+    }
+    $c = wf_cfg($thread['node_id']);
+    if (!$c || $c['kind'] !== 'complaint') {
+        return false;
+    }
+    static $texts = [];
+    $tid = (int)$thread['id'];
+    if (!isset($texts[$tid])) {
+        $body = (string)db_val('SELECT body FROM posts WHERE thread_id = :t ORDER BY id LIMIT 1', ['t' => $tid]);
+        $texts[$tid] = $thread['title'] . "\n" . $body;
+    }
+    foreach ([$u['username'] ?? '', $u['game_nick'] ?? ''] as $nick) {
+        $nick = trim((string)$nick);
+        if (preg_match('~^[A-Za-z]{2,}_[A-Za-z]{2,}$~', $nick)
+            && preg_match('~(?<![A-Za-z0-9_])' . preg_quote($nick, '~') . '(?![A-Za-z0-9_])~i', $texts[$tid])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function wf_recused_text()
+{
+    return 'Это ваша тема или вы упомянуты в жалобе - её рассмотрит другой сотрудник.';
+}
+
 // Старший в разделе: снимает чужие темы, передаёт их и выносит решение вместо взявшего
 function wf_is_supervisor($node)
 {
@@ -514,6 +550,9 @@ function wf_claim(array $thread, array $node)
     if ($thread['is_deleted']) {
         return [false, 'Тема удалена.'];
     }
+    if (wf_recused($thread)) {
+        return [false, wf_recused_text()];
+    }
     $tid = (int)$thread['id'];
     wf_state_row_ensure($tid);
     $n = db_exec('UPDATE wf_threads SET claimed_by = :u, claimed_at = :t, updated_at = :t2 WHERE thread_id = :id AND claimed_by IS NULL',
@@ -573,6 +612,9 @@ function wf_transfer(array $thread, array $node, $toUserId)
     $to = user_by_id((int)$toUserId);
     if (!$to || !wf_user_can_process($to, $node)) {
         return [false, 'Этот пользователь не может рассматривать темы в разделе.'];
+    }
+    if (wf_recused($thread, $to)) {
+        return [false, $to['username'] . ' упомянут(а) в этой теме, передайте её другому сотруднику.'];
     }
     if ((int)$to['id'] === $was) {
         return [false, 'Тема уже у этого сотрудника.'];
@@ -641,6 +683,9 @@ function wf_verdict(array $thread, array $node, array $in)
     }
     if ($thread['is_deleted']) {
         return [false, 'Тема удалена.', $back];
+    }
+    if (wf_recused($thread)) {
+        return [false, wf_recused_text(), $back];
     }
     $st = wf_thread_state($tid);
     if (!wf_can_verdict($node, $st)) {

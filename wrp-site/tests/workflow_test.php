@@ -346,6 +346,30 @@ t('лидер выносит решение в своём разделе', $ok &
 list($ok) = wf_claim(thread_get($t8), node_get(52));
 t('лидер не берёт темы чужого раздела', !$ok);
 
+// ---------- Отвод: жалоба на самого рассматривающего ----------
+
+$t10 = new_thread('Roxas_Alexandro', 52, 'Жалоба на Martin_Line | DM', 1);
+as_user('Martin_Line');
+list($ok, $msg) = wf_claim(thread_get($t10), node_get(52));
+t('хелпер не берёт жалобу на самого себя', !$ok && strpos($msg, 'упомянуты') !== false, $msg);
+list($ok) = wf_verdict(thread_get($t10), node_get(52), ['prefix_id' => 3, 'macro_id' => 0, 'body' => 'Отказано', 'lock' => false, 'archive' => false]);
+t('и не выносит по ней решение', !$ok);
+t('кнопки «Взять» у него нет', wf_recused(thread_get($t10)) && strpos(hook_html('thread_actions', thread_get($t10), node_get(52)), 'claim') === false);
+as_user('Diego_Bacardi');
+list($ok, $msg) = wf_claim(thread_get($t10), node_get(52));
+t('другой сотрудник берёт её', $ok, $msg);
+as_user('Ricardo_Calump');
+list($ok, $msg) = wf_transfer(thread_get($t10), node_get(52), (int)user_by_name('Martin_Line')['id']);
+t('передать жалобу упомянутому нельзя', !$ok, $msg);
+$t11 = new_thread('Ricardo_Calump', 52, 'Жалоба на Kuzya_Kabanov', 1);
+as_user('Ricardo_Calump');
+list($ok) = wf_claim(thread_get($t11), node_get(52));
+t('свою жалобу не берут', !$ok);
+$t12 = new_thread('Roxas_Alexandro', 21, 'Martin_Line тоже не может зайти', 11);
+as_user('Martin_Line');
+list($ok, $msg) = wf_claim(thread_get($t12), node_get(21));
+t('в техразделе упоминание ника не мешает', $ok, $msg);
+
 echo "\n" . ($fails ? $fails . ' FAILED of ' . $total : 'ALL OK (' . $total . ')') . "\n";
 wf_test_cleanup();
 exit($fails ? 1 : 0);

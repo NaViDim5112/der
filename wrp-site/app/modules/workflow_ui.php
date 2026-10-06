@@ -131,7 +131,7 @@ hook_add('thread_actions', function ($thread, $node) {
         return '';
     }
     $c = wf_cfg($node['id']);
-    if (!$c || !wf_can_process($node) || !wf_is_open($thread, $c)) {
+    if (!$c || !wf_can_process($node) || !wf_is_open($thread, $c) || wf_recused($thread)) {
         return '';
     }
     $st = wf_state($thread['id']);
@@ -231,7 +231,9 @@ function wf_status_box(array $thread, array $node)
 
     // Инструменты сотрудника
     if ($c && wf_can_process($node) && !$thread['is_deleted']) {
-        $h .= wf_tools_html($thread, $node, $c, $st, $open, $mine);
+        $h .= wf_recused($thread)
+            ? '<div class="wf-tools wf-tools-note muted small">' . icon('info') . ' ' . e(wf_recused_text()) . '</div>'
+            : wf_tools_html($thread, $node, $c, $st, $open, $mine);
     }
     return $h . '</section>';
 }
@@ -250,6 +252,11 @@ function wf_tools_html(array $thread, array $node, $c, $st, $open, $mine)
     if ($open && (!$claimed || $mine || $super)) {
         $cands = wf_candidates($node);
         unset($cands[(int)($st['claimed_by'] ?? 0)]);
+        foreach ($cands as $k => $cu) {
+            if (wf_recused($thread, $cu)) {
+                unset($cands[$k]);
+            }
+        }
         if ($cands) {
             $opts = '';
             foreach ($cands as $u) {
