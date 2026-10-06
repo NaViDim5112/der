@@ -112,6 +112,7 @@ if ($action === 'delete') {
         node_rebuild($node['id']);
         user_rebuild_counts($post['user_id']);
         mod_log('post_delete', 'post', $pid, $thread['title']);
+        hook_fire('post_deleted', $post, $thread, $node);
     }
     flash('success', 'Сообщение удалено.');
     redirect(fp_post_anchor_url($post, true));
@@ -129,6 +130,7 @@ if ($action === 'restore') {
         node_rebuild($node['id']);
         user_rebuild_counts($post['user_id']);
         mod_log('post_restore', 'post', $pid, $thread['title']);
+        hook_fire('post_restored', $post, $thread, $node);
         flash('success', 'Сообщение восстановлено.');
     }
     redirect(fp_post_anchor_url($post, true));
@@ -183,11 +185,16 @@ if (is_post()) {
     if ($err) {
         $errors['body'] = $err;
     }
+    $errors = hook_filter('post_edit_validate', $errors, $post, $thread, $node);
     if (!$errors) {
         $changed = false;
+        $body = hook_filter('post_body_save', $body, $node, $thread);
         if ($body !== $post['body']) {
+            // До сохранения: модули могут сохранить старую версию (история правок)
+            hook_fire('post_before_update', $post, $body, $thread, $node);
             db_update('posts', ['body' => $body, 'edited_at' => now(), 'edited_by' => uid()], 'id = :id', ['id' => $pid]);
             $changed = true;
+            hook_fire('post_updated', $post, $body, $thread, $node);
         }
         $tData = [];
         if ($canTitle && $title !== $thread['title']) {
@@ -263,6 +270,7 @@ $u = fp_author($post);
   </div>
   <?php endif; ?>
   <textarea class="textarea" name="body" rows="14" data-editor maxlength="50000"><?= e($body) ?></textarea>
+  <?= hook_html('post_edit_form', $post, $thread, $node) ?>
   <div class="compose-actions">
     <a class="btn btn-ghost btn-pill" href="<?= e(post_url($pid)) ?>">Отмена</a>
     <button class="btn btn-white btn-pill" type="submit"><?= icon('check') ?> Сохранить</button>

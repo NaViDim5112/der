@@ -144,6 +144,8 @@ if ($thread['is_deleted']) {
 }
 $firstBody = $firstPostId ? (string)db_val('SELECT body FROM posts WHERE id = :id', ['id' => $firstPostId]) : '';
 
+$meta = hook_filter('thread_meta', $meta, $thread, $node);
+
 forum_header([
     'title' => $thread['title'],
     'h1_html' => prefix_html($thread['prefix_id']) . e($thread['title']),
@@ -178,6 +180,7 @@ $pagesHtml = fp_pagination($pg, '/forum/thread.php', ['id' => $tid]);
     <button class="btn btn-black btn-pill<?= $watched ? ' is-on' : '' ?>" type="submit" title="Оповещения об ответах в теме"><?= icon('bell') ?> <span><?= $watched ? 'Не отслеживать' : 'Отслеживать' ?></span></button>
   </form>
   <?php endif; ?>
+  <?= hook_html('thread_actions', $thread, $node) ?>
   <?php if ($isMod): ?>
   <div class="dropdown mod-dd">
     <button class="btn btn-black btn-pill" type="button" data-dropdown><?= icon('shield') ?> Модерация <?= icon('chevron-down') ?></button>
@@ -199,6 +202,7 @@ $pagesHtml = fp_pagination($pg, '/forum/thread.php', ['id' => $tid]);
       </form>
       <div class="dropdown-sep"></div>
       <?php endif; ?>
+      <?= hook_html('thread_mod_menu', $thread, $node) ?>
       <?= $thread['is_pinned'] ? $modForm('unpin', 'Открепить', 'pin') : $modForm('pin', 'Закрепить', 'pin') ?>
       <?= $thread['is_locked'] ? $modForm('unlock', 'Открыть тему', 'unlock') : $modForm('lock', 'Закрыть тему', 'lock') ?>
       <?php if ($nodePrefixes || $thread['prefix_id']): ?>
@@ -225,6 +229,8 @@ $pagesHtml = fp_pagination($pg, '/forum/thread.php', ['id' => $tid]);
   </form>
 </div>
 <?php endif; ?>
+
+<?= hook_html('thread_before_posts', $thread, $node, $pg) ?>
 
 <div class="posts">
 <?php
@@ -257,6 +263,8 @@ if (!$posts) {
 <div class="page-actions thread-actions"><?= $pagesHtml ?></div>
 <?php endif; ?>
 
+<?= hook_html('thread_after_posts', $thread, $node, $pg) ?>
+
 <?php if ($replyDenied === ''): $me = user(); ?>
 <div class="card quick-reply" id="reply">
   <div class="qr-user"><?= avatar($me, 'xl') ?></div>
@@ -271,6 +279,7 @@ if (!$posts) {
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="reply">
       <textarea class="textarea" name="body" rows="6" data-editor data-draft="reply-<?= $tid ?>" placeholder="Напишите свой ответ..." maxlength="50000"><?= e($replyBody) ?></textarea>
+      <?= hook_html('thread_reply_form', $thread, $node) ?>
       <div class="qr-actions">
         <span class="muted small hide-sm">Ctrl + Enter - отправить</span>
         <button class="btn btn-accent" type="submit"><?= icon('reply') ?> Ответить</button>

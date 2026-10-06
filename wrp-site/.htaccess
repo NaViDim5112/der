@@ -10,7 +10,7 @@ DirectoryIndex index.php
   # RewriteBase /wrp/
 
   # Служебные папки и скрытые файлы закрыты
-  RewriteRule ^(app|config|sql|storage|tests|\.git|\.osp)(/|$) - [F,L]
+  RewriteRule ^(app|config|sql|storage|tests|tools|docs|\.git|\.osp)(/|$) - [F,L]
   RewriteRule (^|/)\.(?!well-known(/|$)) - [F,L]
 
   # Всё остальное отдаётся из public/: /forum/ -> /public/forum/

@@ -286,6 +286,8 @@ if (!$alreadyInstalled && is_post()) {
                     $pdo->exec($stmt);
                 }
             }
+            // Обновления базы (sql/migrations): новые таблицы и данные модулей
+            migrations_run($pdo);
 
             $now = date('Y-m-d H:i:s');
             $st = $pdo->prepare('INSERT INTO `users` (`username`, `email`, `password_hash`, `group_id`, `created_at`) VALUES (?, ?, ?, 10, ?)');
@@ -352,11 +354,10 @@ if (!$alreadyInstalled && is_post()) {
                     if ($createdDb) {
                         $pdo->exec('DROP DATABASE IF EXISTS `' . $dbName . '`');
                     } else {
-                        $schema = (string)@file_get_contents(WRP_ROOT . '/sql/schema.sql');
-                        preg_match_all('~CREATE TABLE(?: IF NOT EXISTS)? `([A-Za-z0-9_]+)`~i', $schema, $mm);
+                        // Удаляем все таблицы, которых не было до установки (схема и обновления)
                         $before = array_map('strtolower', $tablesBefore);
-                        foreach ($mm[1] as $t) {
-                            if (!in_array(strtolower($t), $before, true)) {
+                        foreach ($pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN) as $t) {
+                            if (!in_array(strtolower($t), $before, true) && preg_match('~^[A-Za-z0-9_]+$~', $t)) {
                                 $pdo->exec('DROP TABLE IF EXISTS `' . $t . '`');
                             }
                         }

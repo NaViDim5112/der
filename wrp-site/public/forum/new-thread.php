@@ -78,6 +78,8 @@ if (is_post()) {
     $pin = $isMod && input_bool('pin');
     $lock = $isMod && input_bool('lock');
     $watch = input_bool('watch');
+    // Модули проверяют свои поля (опрос, вложения): [поле => текст ошибки]
+    $errors = hook_filter('new_thread_validate', $errors, $node, $useForm);
     if (!$errors) {
         $wait = fp_flood_wait();
         if ($wait > 0) {
@@ -148,6 +150,7 @@ if ($isMod) {
   </div>
   <?php endif; ?>
   <?= form_fields_html($form, $values, $errors) ?>
+  <?= hook_html('new_thread_form', $node, true, $errors) ?>
   <div class="xf-actions"><button class="btn btn-white btn-pill" type="submit"><?= icon('send') ?> Отправить</button></div>
 </form>
 <?php else: ?>
@@ -167,6 +170,7 @@ if ($isMod) {
     <input class="input compose-title-input<?= isset($errors['title']) ? ' has-error' : '' ?>" name="title" value="<?= e($title) ?>" maxlength="150" placeholder="<?= e($node['title_hint'] ?: 'Заголовок темы') ?>" required autofocus>
   </div>
   <textarea class="textarea" name="body" rows="16" data-editor data-draft="thread-<?= $nid ?>"<?= !is_post() && $body !== '' ? ' data-template-default' : '' ?> maxlength="50000" placeholder="Текст темы..."><?= e($body) ?></textarea>
+  <?= hook_html('new_thread_form', $node, false, $errors) ?>
   <div class="compose-settings">
     <span class="compose-settings-label">Настройки:</span>
     <label class="check"><input type="checkbox" name="watch" value="1"<?= $watch ? ' checked' : '' ?>><span>Отслеживать эту тему</span></label>

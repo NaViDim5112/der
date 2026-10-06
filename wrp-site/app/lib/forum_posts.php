@@ -241,6 +241,7 @@ function fp_thread_row(array $t, array $reads, array $opts = [])
 
     $cls = 'trow' . ($unread ? ' unread' : '') . ($t['is_pinned'] ? ' pinned' : '') . ($t['is_locked'] ? ' locked' : '') . ($t['is_deleted'] ? ' deleted' : '');
     $h = '<div class="' . $cls . '" id="thread-' . $tid . '">';
+    $h .= hook_html('thread_row_start', $t, $opts);
     $h .= '<div class="trow-avatar">' . fp_avatar_link($author, 'm') . '</div>';
 
     $h .= '<div class="trow-main">';
@@ -251,6 +252,7 @@ function fp_thread_row(array $t, array $reads, array $opts = [])
     if ($t['is_deleted']) {
         $h .= ' <span class="tag tag-deleted">' . icon('trash') . 'Удалена</span>';
     }
+    $h .= hook_html('thread_row_title_after', $t, $opts);
     $h .= '</div>';
 
     $h .= '<div class="trow-meta">' . fp_user_link($author) . '<span class="trow-dot">·</span><a class="trow-date" href="' . e(thread_url($tid)) . '">' . e(fdate($t['created_at'])) . '</a>';
@@ -395,7 +397,7 @@ function fp_reply_denied(array $thread, $node)
     if ($thread['is_locked'] && !can_moderate()) {
         return 'Тема закрыта. Ответы в ней больше не принимаются.';
     }
-    return '';
+    return (string)hook_filter('thread_reply_denied', '', $thread, $node);
 }
 
 // Может ли текущий пользователь редактировать сообщение
@@ -463,11 +465,13 @@ function fp_post_user_html(array $u)
         if (!empty($u['game_nick'])) {
             $rows[] = ['Игровой ник:', $u['game_nick']];
         }
+        $rows = hook_filter('post_user_rows', $rows, $u);
         $h .= '<dl class="post-userstats">';
         foreach ($rows as $r) {
             $h .= '<div><dt>' . e($r[0]) . '</dt><dd title="' . e($r[1]) . '">' . e($r[1]) . '</dd></div>';
         }
         $h .= '</dl>';
+        $h .= hook_html('post_user_after', $u);
     }
     return $h . '</div>';
 }
@@ -498,6 +502,7 @@ function fp_render_post(array $p, array $ctx)
     if (!empty($ctx['unread'])) {
         $h .= '<span class="badge-new badge-new-pink">Новое</span>';
     }
+    $h .= hook_html('post_head_right', $p, $ctx);
     $h .= '<button type="button" class="post-head-btn" data-copy="' . e(site_origin() . $postUrl) . '" title="Скопировать ссылку на сообщение">' . icon('share') . '</button>';
     $h .= '<a class="post-num" href="' . e($postUrl) . '">#' . (int)($ctx['pos'] ?? 1) . '</a>';
     $h .= '</div></header>';
@@ -506,6 +511,7 @@ function fp_render_post(array $p, array $ctx)
     if (!empty($p['edited_at'])) {
         $h .= '<div class="post-edited">' . icon('edit') . 'Изменено: ' . e(fdate($p['edited_at'])) . (!empty($p['editor_name']) ? ' (' . e($p['editor_name']) . ')' : '') . '</div>';
     }
+    $h .= hook_html('post_after_body', $p, $ctx);
     if (!empty($u['signature']) && trim($u['signature']) !== '') {
         $h .= '<div class="post-sig bb">' . bbcode($u['signature']) . '</div>';
     }
@@ -527,7 +533,9 @@ function fp_render_post(array $p, array $ctx)
             $h .= '<button type="button" class="post-act" data-copy="' . e($p['ip']) . '" title="IP: ' . e($p['ip']) . ' (нажмите, чтобы скопировать)">' . icon('server') . '<span>IP</span></button>';
         }
     }
+    $h .= hook_html('post_actions_left', $p, $ctx);
     $h .= '</div><div class="post-foot-right">';
+    $h .= hook_html('post_actions_right', $p, $ctx);
     if (!$p['is_deleted']) {
         $h .= fp_react_button($p, $likes, $mine);
     }
@@ -540,6 +548,7 @@ function fp_render_post(array $p, array $ctx)
 
     $bar = fp_reactions_bar($pid, $likes);
     $h .= '<div class="reactions-bar" data-reactions="' . $pid . '"' . ($bar === '' ? ' hidden' : '') . '>' . $bar . '</div>';
+    $h .= hook_html('post_footer_after', $p, $ctx);
     $h .= '</div></article>';
     return $h;
 }
@@ -784,6 +793,8 @@ function fp_quote_bbcode(array $p)
 // Новая тема. $opt: pinned, locked, watch. Возвращает id темы.
 function fp_create_thread(array $node, $title, $prefixId, $body, array $opt = [])
 {
+    $body = hook_filter('post_body_save', $body, $node, null);
+    $title = hook_filter('thread_title_save', $title, $node);
     $now = now();
     $me = uid();
     $pdo = db();
@@ -831,12 +842,14 @@ function fp_create_thread(array $node, $title, $prefixId, $body, array $opt = []
             alert_add($wid, 'thread', $me, $tid, $pid);
         }
     }
+    hook_fire('thread_created', $tid, $node, $pid);
     return $tid;
 }
 
 // Ответ в теме. Возвращает id сообщения.
 function fp_create_post(array $thread, array $node, $body)
 {
+    $body = hook_filter('post_body_save', $body, $node, $thread);
     $now = now();
     $pid = db_insert('posts', [
         'thread_id' => (int)$thread['id'],
@@ -851,6 +864,7 @@ function fp_create_post(array $thread, array $node, $body)
     thread_mark_read($thread['id'], $now);
     thread_watch($thread['id'], true);
     fp_notify_post($thread, $node, $pid, $body, true);
+    hook_fire('post_created', $pid, $thread, $node);
     return $pid;
 }
 
@@ -916,6 +930,15 @@ function fp_thread_set_deleted(array $thread, $deleted)
 
 // Действие модератора над темой. Возвращает [ok, сообщение, адрес для перехода].
 function fp_mod_thread(array $thread, array $node, $do)
+{
+    $r = fp_mod_thread_do($thread, $node, $do);
+    if ($r[0]) {
+        hook_fire('thread_moderated', $thread, $node, $do);
+    }
+    return $r;
+}
+
+function fp_mod_thread_do(array $thread, array $node, $do)
 {
     $tid = (int)$thread['id'];
     $back = thread_url($tid);

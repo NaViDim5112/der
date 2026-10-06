@@ -53,6 +53,7 @@ $orders = [
     'replies' => ['Ответы', 't.reply_count DESC, t.last_post_at DESC'],
     'views' => ['Просмотры', 't.views DESC, t.last_post_at DESC'],
 ];
+$orders = hook_filter('forum_orders', $orders, $node);
 $order = query_str('order', 'last');
 if (!isset($orders[$order])) {
     $order = 'last';
@@ -76,6 +77,8 @@ if ($mine) {
     $where[] = 't.user_id = :u';
     $params['u'] = uid();
 }
+// Модули могут добавить свои условия: [условия, параметры]
+list($where, $params) = hook_filter('forum_threads_where', [$where, $params], $node);
 $w = implode(' AND ', $where);
 
 $children = node_visible_children($nid);
@@ -139,9 +142,12 @@ if (!$container):
     <button class="btn btn-black btn-pill<?= $watched ? ' is-on' : '' ?>" type="submit" title="Оповещения о новых темах в разделе"><?= icon('bell') ?> <?= $watched ? 'Не отслеживать' : 'Отслеживать' ?></button>
   </form>
   <?php endif; ?>
+  <?= hook_html('forum_actions', $node) ?>
 </div>
 
-<section class="block thread-list">
+<?= hook_html('forum_before_list', $node) ?>
+
+<section class="block thread-list" data-node="<?= $nid ?>">
   <div class="block-head thread-list-head">
     <div class="filter-tags">
       <?php if ($prefix > 0): ?>
@@ -216,6 +222,7 @@ if (!$container):
   </div>
   <?php endif; ?>
 </section>
+<?= hook_html('forum_list_after', $node, $pg) ?>
 
 <?php if ($pg['pages'] > 1): ?>
 <div class="page-actions forum-actions"><?= $pagesHtml ?></div>
