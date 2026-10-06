@@ -145,7 +145,7 @@ hr { border: 0; border-top: 1px solid var(--border); margin: 16px 0; }
 .btn-black:hover { background: #000; color: #fff; }
 :root[data-theme="light"] .btn-black { color: var(--text); }
 .btn-accent { background: var(--accent-grad); color: #fff; box-shadow: 0 8px 22px rgba(255, 70, 70, .25); }
-.btn-accent:hover { color: #fff; filter: brightness(1.08); }
+.btn-accent:hover { background: var(--accent-grad); color: #fff; filter: brightness(1.08); }
 .btn-outline { background: transparent; border-color: var(--border-strong); }
 .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
 .btn-danger { background: rgba(239, 68, 68, .14); color: #ff7a7a; }
