@@ -1,0 +1,252 @@
+/* Модуль «Рассмотрение»: ход рассмотрения темы, решение, значки в списках, очередь, голосование, статистика.
+   Только переменные темы - работает в тёмной и светлой. */
+
+/* ---------- Ход рассмотрения (над сообщениями темы) ---------- */
+
+.wf-box {
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  position: relative;
+  overflow: hidden;
+}
+.wf-box::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent-grad); }
+.wf-box.is-done::before { background: var(--success); }
+.wf-box.is-overdue { border-color: rgba(239, 68, 68, .4); }
+.wf-box.is-overdue::before { background: var(--danger); }
+
+.wf-box-head { display: flex; align-items: center; justify-content: space-between; gap: 8px 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.wf-box-title { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; }
+.wf-box-title .icon { width: 17px; height: 17px; color: var(--accent); }
+.wf-box.is-done .wf-box-title .icon { color: var(--success); }
+
+.wf-dl { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 1.35; background: var(--panel-3); color: var(--text-2); }
+.wf-dl .icon { width: 14px; height: 14px; flex: none; }
+.wf-dl b { color: var(--text); }
+.wf-dl-ok .icon { color: var(--info); }
+.wf-dl-soon { background: rgba(245, 158, 11, .14); color: #fbbf24; }
+.wf-dl-soon b { color: inherit; }
+.wf-dl-overdue { background: rgba(239, 68, 68, .16); color: #ff7a7a; }
+.wf-dl-overdue b { color: inherit; }
+.wf-dl-done { background: rgba(34, 197, 94, .13); color: #4ade80; }
+.wf-dl-done b { color: inherit; }
+:root[data-theme="light"] .wf-dl-soon { color: #b45309; }
+:root[data-theme="light"] .wf-dl-overdue { color: #b91c1c; }
+:root[data-theme="light"] .wf-dl-done { color: #15803d; }
+
+.wf-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.wf-step { display: flex; align-items: flex-start; gap: 10px; min-width: 0; padding: 10px 12px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--border); }
+.wf-step-dot { width: 26px; height: 26px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--panel-3); color: var(--muted); border: 1px solid var(--border-strong); }
+.wf-step-dot .icon { width: 14px; height: 14px; }
+.wf-step.is-done .wf-step-dot { background: rgba(34, 197, 94, .15); border-color: rgba(34, 197, 94, .4); color: #4ade80; }
+.wf-step.is-current .wf-step-dot { background: var(--accent-grad); border-color: transparent; color: #fff; box-shadow: 0 4px 12px rgba(255, 70, 70, .3); }
+.wf-step.is-current.is-waiting .wf-step-dot { background: var(--panel-3); color: var(--warning); border-color: rgba(245, 158, 11, .45); box-shadow: none; }
+.wf-step.is-final { border-color: rgba(34, 197, 94, .3); }
+:root[data-theme="light"] .wf-step.is-done .wf-step-dot { color: #15803d; }
+.wf-step-body { display: grid; gap: 2px; min-width: 0; }
+.wf-step-label { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.wf-step-val { font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.wf-step-val .avatar { margin-right: 2px; }
+.wf-step-val .prefix { margin-right: 2px; }
+.wf-step-link { font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+.wf-step-link:hover { text-decoration: underline; }
+
+.wf-evidence { display: flex; gap: 10px; align-items: flex-start; margin-top: 10px; padding: 9px 12px; border-radius: 10px; border: 1px solid rgba(245, 158, 11, .35); background: rgba(245, 158, 11, .08); font-size: 12.5px; color: var(--text-2); }
+.wf-evidence > .icon { width: 16px; height: 16px; margin-top: 1px; color: var(--warning); }
+.wf-evidence b { color: var(--text); }
+
+.wf-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.wf-tools form { margin: 0; }
+.wf-tools .btn.is-on { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35); }
+/* Кнопки-акценты модуля при наведении не теряют градиент (иначе в светлой теме белый текст на светлом фоне) */
+.wf-box .btn-accent:hover, .wf-transfer-menu .btn-accent:hover, .btn-accent.wf-btn:hover, .wf-staff-add .btn-accent:hover { background: var(--accent-grad); color: #fff; }
+.wf-tools-note { gap: 6px; }
+.wf-tools-note .icon { width: 14px; height: 14px; }
+.wf-transfer-menu { width: 260px; padding: 12px; }
+.wf-transfer-menu .form { gap: 8px; }
+.dropdown-menu .wf-transfer-menu .btn, .wf-transfer-menu .btn { width: auto; justify-content: center; color: #fff; }
+
+/* ---------- Форма решения ---------- */
+
+.wf-verdict { margin-top: 12px; padding: 14px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border)); background: var(--panel-2); }
+.wf-verdict[hidden] { display: none; }
+.wf-verdict-form { gap: 12px; }
+.wf-pfx-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.wf-pfx { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel); cursor: pointer; font-size: 12.5px; font-weight: 600; }
+.wf-pfx input { width: 14px; height: 14px; margin: 0; accent-color: var(--accent); }
+.wf-pfx .prefix { margin: 0; font-size: 11px; }
+.wf-pfx:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+.wf-pfx:hover { border-color: var(--border-strong); }
+.wf-pfx-keep { color: var(--text-2); }
+.wf-pfx.is-final::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); opacity: .8; }
+.wf-verdict .editor textarea { min-height: 150px; }
+.wf-verdict-opts { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+.wf-verdict-opts .check .icon { width: 14px; height: 14px; color: var(--muted); }
+.wf-verdict-opts .is-disabled { color: var(--muted); cursor: default; font-size: 12.5px; }
+.wf-verdict-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.wf-verdict-foot .hint { margin-right: auto; }
+
+/* ---------- Готовые ответы в форме ответа ---------- */
+
+.wf-qr-macros { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.wf-qr-macros > .icon { width: 16px; height: 16px; color: var(--muted); flex: none; }
+.wf-qr-macros .select { height: 34px; max-width: 420px; font-size: 13px; }
+
+/* ---------- Голосование ---------- */
+
+.wf-vote { margin-top: 10px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--panel-2); display: grid; gap: 8px; }
+.wf-vote.busy { opacity: .65; pointer-events: none; }
+.wf-vote-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.wf-vote-title { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 13px; }
+.wf-vote-title .icon { width: 15px; height: 15px; color: var(--warning); }
+.wf-vote-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.wf-vote-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--panel);
+  color: var(--text-2);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.wf-vote-btn .icon { width: 15px; height: 15px; }
+.wf-vote-btn b { font-weight: 800; color: var(--text); }
+.wf-vote-up:hover:not([disabled]), .wf-vote-up.is-on { border-color: rgba(34, 197, 94, .55); color: #4ade80; background: rgba(34, 197, 94, .1); }
+.wf-vote-down:hover:not([disabled]), .wf-vote-down.is-on { border-color: rgba(239, 68, 68, .55); color: #ff7a7a; background: rgba(239, 68, 68, .1); }
+:root[data-theme="light"] .wf-vote-up:hover:not([disabled]), :root[data-theme="light"] .wf-vote-up.is-on { color: #15803d; }
+:root[data-theme="light"] .wf-vote-down:hover:not([disabled]), :root[data-theme="light"] .wf-vote-down.is-on { color: #b91c1c; }
+.wf-vote-btn[disabled] { cursor: default; opacity: .75; }
+.wf-vote-meter { height: 8px; border-radius: 8px; background: rgba(239, 68, 68, .45); overflow: hidden; }
+.wf-vote-meter span { display: block; height: 100%; background: var(--success); border-radius: 8px 0 0 8px; transition: width .25s; }
+.wf-vote.is-empty .wf-vote-meter { background: var(--panel-3); }
+.wf-vote.is-empty .wf-vote-meter span { background: transparent; }
+.wf-vote-note a { color: var(--accent); font-weight: 700; }
+
+/* ---------- Значки в списках тем ---------- */
+
+.wf-chip { display: inline-flex; align-items: center; gap: 4px; padding: 0 7px; border-radius: 6px; font-size: 11px; font-weight: 700; line-height: 18px; vertical-align: 1px; background: var(--panel-3); color: var(--text-2); white-space: nowrap; }
+.wf-chip .icon { width: 11px; height: 11px; }
+.wf-chip-claim .icon { color: var(--info); }
+.wf-chip-ok .icon { color: var(--info); }
+.wf-chip-soon { background: rgba(245, 158, 11, .15); color: #fbbf24; }
+.wf-chip-overdue { background: rgba(239, 68, 68, .16); color: #ff7a7a; }
+.wf-chip-votes { gap: 6px; }
+.wf-chip-votes .up { color: #4ade80; }
+.wf-chip-votes .down { color: #ff7a7a; }
+:root[data-theme="light"] .wf-chip-soon { color: #b45309; }
+:root[data-theme="light"] .wf-chip-overdue { color: #b91c1c; }
+:root[data-theme="light"] .wf-chip-votes .up { color: #15803d; }
+:root[data-theme="light"] .wf-chip-votes .down { color: #b91c1c; }
+
+/* ---------- Раздел: ответственные ---------- */
+
+.wf-resp { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--panel); font-size: 12.5px; }
+.wf-resp > .icon { width: 16px; height: 16px; color: var(--accent); }
+.wf-resp-text { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.wf-resp-label { color: var(--muted); font-weight: 700; }
+.wf-resp-user { display: inline-flex; align-items: center; gap: 5px; margin-right: 6px; }
+.wf-resp-sep { color: var(--muted); opacity: .7; }
+.wf-resp-queue { margin-left: auto; }
+
+/* ---------- Левое меню ---------- */
+
+.wf-side-count { margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--accent-2); color: #fff; font-size: 10.5px; font-weight: 800; line-height: 18px; text-align: center; }
+
+/* ---------- Очередь ---------- */
+
+.wf-queue-tabs { margin-bottom: 12px; }
+.wf-queue-tabs .tab { display: inline-flex; align-items: center; gap: 6px; }
+.wf-tab-count { min-width: 20px; padding: 0 6px; border-radius: 10px; background: var(--panel); color: var(--text-2); font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; }
+.tab.active .wf-tab-count { background: var(--accent-grad); color: #fff; }
+.wf-tab-count.is-hot { background: rgba(239, 68, 68, .18); color: #ff7a7a; }
+.wf-queue-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.wf-queue-filters .select { width: auto; min-width: 180px; max-width: 100%; height: 34px; font-size: 13px; }
+.wf-take { display: inline-flex; margin: 0; }
+.wf-take button { height: 28px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--panel-3); color: var(--text); font-size: 11.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.wf-take button .icon { width: 13px; height: 13px; }
+.wf-take button:hover { background: var(--accent-grad); color: #fff; border-color: transparent; }
+.wf-queue-empty .icon { color: var(--success); opacity: .8; }
+
+/* ---------- Статистика ---------- */
+
+.wf-stats-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.wf-stats .table th a { display: inline-flex; align-items: center; gap: 3px; color: var(--muted); }
+.wf-stats .table th a:hover, .wf-stats .table th a.is-sorted { color: var(--text); }
+.wf-stats .table th a .icon { width: 12px; height: 12px; }
+.wf-stats .table th.num, .wf-stats .table td.num { text-align: right; white-space: nowrap; }
+.wf-stats .table td.num b { font-weight: 800; }
+.wf-stats .table .prefix { margin: 0; }
+.wf-stats-user { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+.wf-stats-total td { font-weight: 800; background: var(--panel-2); }
+.wf-bad { color: #ff7a7a; }
+:root[data-theme="light"] .wf-bad { color: #b91c1c; }
+.wf-stats-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+.wf-stat { padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--panel); }
+.wf-stat b { display: block; font-size: 22px; font-weight: 800; line-height: 1.2; }
+.wf-stat small { color: var(--muted); font-size: 12px; font-weight: 700; }
+
+/* ---------- Админ-панель ---------- */
+
+.wf-adm-flags { display: flex; flex-wrap: wrap; gap: 4px; }
+.wf-adm-macro-body { max-width: 520px; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wf-adm-macro-where { display: flex; align-items: center; gap: 5px; margin-top: 3px; max-width: 520px; color: var(--text-2); font-size: 11.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wf-adm-macro-where .icon { width: 12px; height: 12px; color: var(--muted); flex: none; }
+.wf-adm-mprefix { display: none; margin-top: 4px; }
+@media (max-width: 760px) {
+  .wf-adm-macro-body, .wf-adm-macro-where { max-width: 230px; }
+}
+@media (max-width: 520px) {
+  .wf-adm-mprefix { display: block; }
+  .wf-adm-macro-body, .wf-adm-macro-where { max-width: 200px; }
+}
+.wf-ph-keys { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.wf-ph-keys button { padding: 3px 8px; border: 1px solid var(--border-strong); border-radius: 7px; background: var(--panel-2); color: var(--text); font-family: var(--mono); font-size: 12px; cursor: pointer; }
+.wf-ph-keys button:hover { border-color: var(--accent); color: var(--accent); }
+.wf-staff-node { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.wf-staff-node:last-child { border-bottom: 0; }
+.wf-staff-node h3 { font-size: 14px; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.wf-staff-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.wf-staff-item { display: inline-flex; align-items: center; gap: 6px; padding: 4px 4px 4px 8px; border-radius: 9px; border: 1px solid var(--border); background: var(--panel-2); font-size: 13px; }
+.wf-staff-item form { margin: 0; }
+.wf-staff-item .btn { height: 24px; width: 24px; padding: 0; }
+.wf-staff-add { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+
+/* ---------- Адаптив ---------- */
+
+@media (max-width: 900px) {
+  .wf-stats-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wf-staff-add { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+@media (max-width: 760px) {
+  .wf-steps { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .wf-step { padding: 8px 10px; }
+  .wf-box { padding: 12px; }
+  .wf-resp { align-items: flex-start; }
+  .wf-resp > .icon { margin-top: 2px; }
+  .wf-resp-text { flex-basis: calc(100% - 30px); }
+  .wf-resp-queue { margin-left: 26px; }
+  .wf-vote-row { grid-template-columns: 1fr 1fr; }
+  .wf-vote-meter { grid-column: 1 / -1; grid-row: 2; }
+  .wf-vote-btn { justify-content: center; }
+  .wf-verdict { padding: 10px; }
+  .wf-verdict-foot .hint { flex-basis: 100%; }
+  .wf-queue-filters .select { min-width: 0; flex: 1 1 140px; }
+}
+
+@media (max-width: 520px) {
+  .wf-staff-add { grid-template-columns: minmax(0, 1fr); }
+  .wf-box-head { margin-bottom: 10px; }
+  .wf-tools .btn { flex: 1 1 auto; }
+  .wf-tools .wf-transfer { flex: 1 1 auto; display: flex; }
+  .wf-tools .wf-transfer > .btn { width: 100%; }
+  .wf-transfer-menu { width: min(280px, calc(100vw - 40px)); }
+}
