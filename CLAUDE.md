@@ -43,16 +43,21 @@
 - Структура: `app/bootstrap.php`, `app/lib/*.php` (подключаются все), `public/` (корень сайта: `index.php`, `forum/`, `wiki/`, `cabinet/`, `admin/`, `install/`), `sql/schema.sql` + `sql/seed.sql` (сид генерируется скриптом, правки сида - вместе со скриптом), `config/config.example.php`.
 - Код: PHP 7.4 (без match, ?->, именованных аргументов). Запросы только через `db_*` с параметрами, один именованный плейсхолдер не повторять. Вывод через `e()`, BB-коды через `bbcode()`, ссылки через `url()`, формы с `csrf_field()` / `csrf_check()`.
 - Анкеты жалоб и заявлений - `nodes.form_json` (`app/lib/forms.php`), конструктор в админке.
+- Новые функции - модулями `app/modules/*.php` через точки расширения (`hook_add`), страницы ядра не править. Список точек и правила - `docs/HOOKS.md`. Модули: workflow (рассмотрение жалоб), moderation, content (вложения, опросы, RSS, `api/news.php` для лаунчера, `docs/API.md`), community (награды, поля профиля, 2FA, объявления, Discord).
+- Изменения базы - только новым файлом `sql/migrations/NNNN_имя.sql` (ядро 0001-0099, workflow 0100-, moderation 0200-, content 0300-, community 0400-), применённые не менять. Применяет установщик, кнопка «Обновить базу» в админке или `php tools/migrate.php`. Фоновые задачи - `cron_register`, ручной запуск `php tools/cron.php --all`.
 
 ## Тестирование в облаке
 - MariaDB: `apt-get install mariadb-server`, `mysqld_safe --user=mysql &`, база `wrp` (user wrp/wrp): `mysql wrp < sql/schema.sql && mysql wrp < sql/seed.sql && php tests/dev_seed.php`.
 - `config/config.php` для теста: installed=true, db wrp/wrp, debug=true.
 - Сервер: `php -S 127.0.0.1:8080 -t public`. Скриншоты: `NODE_PATH=/opt/node22/lib/node_modules node tests/shot.js out.png /forum/ --login admin:admin12345`.
-- BB-коды и XSS: `php tests/bbcode_test.php`.
+- Если контейнер перезапускался: `mkdir -p /run/mysqld && chown mysql:mysql /run/mysqld`, затем `mysqld_safe --user=mysql &`; данные сохраняются.
+- Тесты: `php tests/bbcode_test.php` (BB-коды и XSS), `php tests/workflow_test.php`, `php tests/community_test.php`, `BASE=http://127.0.0.1:8080 php tests/moderation_test.php`, `CNT_BASE=http://127.0.0.1:8080 php tests/content_test.php`. Все должны печатать ALL OK.
+- Совместимость с PHP 7.4: PHPCompatibility (`phpcs --standard=PHPCompatibility --runtime-set testVersion 7.4-`).
 
 ## Что осталось по сайту
 - Бренд лаунчера (логотип, wordmark, цвета Tailwind, фоны bg1-4, слайды загрузки) - взять из `E:\WorldRP\modpack\brand` и `ui`, чтобы сайт совпадал с лаунчером.
 - Ссылка на скачивание лаунчера (пока «Скоро»), Discord и соцсети - в админке.
 - Подключить игровую БД к кабинету (по «да», отдельный пользователь только SELECT).
-- Новости сайта и лаунчера из одного источника (раздел новостей форума -> API лаунчера).
+- Лаунчер: брать новости из `/api/news.php` (готово на сайте, формат в `docs/API.md`), в лаунчере ещё не подключено.
+- Включить в админке по желанию: объявления-плашки (созданы выключенными), вебхуки Discord (указать адрес сайта https), ответственных лидеров за разделы организаций.
 - Перед релизом: хостинг или VPS, домен, HTTPS, debug=false, удалить `public/install`.
