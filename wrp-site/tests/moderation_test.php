@@ -46,6 +46,19 @@ $martin = user_by_name('Martin_Line');
 $roxas = user_by_name('Roxas_Alexandro');
 $kuzya = user_by_name('Kuzya_Kabanov');
 
+// Своя личная переписка Roxas <-> Martin (без Kuzya и модератора): создаётся до транзакции,
+// чтобы её видели и HTTP-проверки, и удаляется в конце
+$convId = db_insert('conversations', ['title' => '[mdr-test] переписка', 'starter_id' => (int)$roxas['id'], 'reply_count' => 1, 'created_at' => now(), 'last_message_at' => now(), 'last_message_user_id' => (int)$martin['id']]);
+db_insert('conversation_users', ['conversation_id' => $convId, 'user_id' => (int)$roxas['id']]);
+db_insert('conversation_users', ['conversation_id' => $convId, 'user_id' => (int)$martin['id']]);
+$pmA = db_insert('conversation_messages', ['conversation_id' => $convId, 'user_id' => (int)$roxas['id'], 'body' => 'Тестовое ЛС 1', 'created_at' => now()]);
+$pmB = db_insert('conversation_messages', ['conversation_id' => $convId, 'user_id' => (int)$martin['id'], 'body' => 'Тестовое ЛС 2', 'created_at' => now()]);
+register_shutdown_function(function () use ($convId) {
+    db_exec('DELETE FROM conversation_messages WHERE conversation_id = :c', ['c' => $convId]);
+    db_exec('DELETE FROM conversation_users WHERE conversation_id = :c', ['c' => $convId]);
+    db_exec('DELETE FROM conversations WHERE id = :c', ['c' => $convId]);
+});
+
 $pdo = db();
 $pdo->beginTransaction();
 try {
@@ -102,7 +115,7 @@ try {
     $items = mdr_report_items([$rid]);
     t('два пожаловавшихся в списке', count($items[$rid] ?? []) === 2);
     t('частая причина определяется', in_array(mdr_report_main_reason($items[$rid]), ['insult', 'rules'], true));
-    list($okM, $msgM) = mdr_report_submit('message', 10, 'fraud', 'чужая переписка');
+    list($okM, $msgM) = mdr_report_submit('message', $pmA, 'fraud', 'чужая переписка');
     t('на чужую личную переписку пожаловаться нельзя', !$okM, $msgM);
 
     // Лимит частоты
@@ -114,7 +127,7 @@ try {
 
     // Видимость ЛС для модератора: только по жалобе, без ссылки на переписку
     as_user('Diego_Bacardi');
-    $msgC = mdr_content_load('message', 10);
+    $msgC = mdr_content_load('message', $pmA);
     t('модератор не участник переписки: ЛС не видно напрямую', $msgC && !$msgC['visible'] && $msgC['link'] === '');
 
     // Решение
@@ -325,7 +338,7 @@ if ($base) {
     preg_match('~name="csrf-token" content="([a-f0-9]+)"~', $page, $m);
     t('модератор: POST предупреждения администратору - 403', $http($mod, 'POST', '/forum/warn.php', ['user' => 1, 'type_id' => 1, '_token' => $m[1] ?? ''])[0] === 403);
     t('модератор: IP-адреса - 403', $http($mod, 'GET', '/admin/ips.php')[0] === 403);
-    t('модератор: ЛС без жалобы - 403', $http($mod, 'GET', '/forum/warn.php?type=message&id=11')[0] === 403);
+    t('модератор: ЛС без жалобы - 403', $http($mod, 'GET', '/forum/warn.php?type=message&id=' . $pmB)[0] === 403);
     foreach ([$guest, $user, $mod] as $jar) {
         @unlink($jar);
     }
