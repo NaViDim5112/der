@@ -396,6 +396,26 @@ t('упомянутый старший не снимает чужую тему',
 list($ok) = wf_transfer(thread_get($t14), node_get(52), (int)user_by_name('Martin_Line')['id']);
 t('и не передаёт её', !$ok);
 
+// Скобки из названия темы не становятся BB-кодом в готовом ответе
+$fill = wf_fill('По обращению «{thread}»', ['user_id' => (int)user_by_name('Roxas_Alexandro')['id'], 'title' => 'x [url=https://evil.example]тык[/url]'], user());
+t('название темы в ответе без BB-кодов', strpos($fill, '[url') === false && strpos($fill, '(url=https://evil.example)') !== false, $fill);
+
+// Тему держит сотрудник, которого сняли с должности: её может взять другой
+$t15 = new_thread('Roxas_Alexandro', 52, 'Жалоба на Kuzya_Kabanov снова', 1);
+$mlUser = user_by_name('Martin_Line');
+as_user('Martin_Line');
+wf_claim(thread_get($t15), node_get(52));
+$mlGroup = (int)$mlUser['group_id'];
+db_update('users', ['group_id' => 2], 'id = :id', ['id' => (int)$mlUser['id']]);
+wf_reset_caches();
+as_user('Diego_Bacardi');
+list($ok, $msg) = wf_claim(thread_get($t15), node_get(52));
+t('тему пониженного сотрудника берёт другой', $ok, $msg);
+db_update('users', ['group_id' => $mlGroup], 'id = :id', ['id' => (int)$mlUser['id']]);
+wf_reset_caches();
+$bot = wf_bot_user((int)$mlUser['id'], node_get(52));
+t('системный ответ не от снятого сотрудника', $bot !== null);
+
 echo "\n" . ($fails ? $fails . ' FAILED of ' . $total : 'ALL OK (' . $total . ')') . "\n";
 wf_test_cleanup();
 exit($fails ? 1 : 0);
