@@ -77,6 +77,9 @@ if (is_post()) {
             $an = node_get($form['archive_node_id']);
             if (!$an || $an['type'] !== 'forum' || (int)$an['id'] === $nid) {
                 $errors['archive_node_id'] = 'Архивом может быть только другой раздел-форум.';
+            } elseif (wf_node_view_level($an) < wf_node_view_level(node_get($nid))) {
+                // иначе закрытые жалобы и заявления стали бы видны тем, кому раздел закрыт
+                $errors['archive_node_id'] = 'Архив открыт шире, чем сам раздел. Выберите архив с теми же или более строгими правами просмотра.';
             }
         }
         $adays = adm_post_range('archive_days', 0, 365);

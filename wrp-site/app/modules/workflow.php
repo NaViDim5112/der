@@ -540,6 +540,40 @@ function wf_claim_prefix(array $thread, array $node, $c)
 
 // ---------- Действия ----------
 
+// Самый строгий уровень просмотра раздела с учётом родителей
+function wf_node_view_level($node)
+{
+    $lvl = 0;
+    $guard = 0;
+    while ($node && $guard++ < 20) {
+        $lvl = max($lvl, (int)$node['view_level']);
+        $node = $node['parent_id'] ? node_get($node['parent_id']) : null;
+    }
+    return $lvl;
+}
+
+// Тему держит тот, кто больше не может рассматривать раздел (сняли с должности, забанили):
+// такая тема считается свободной
+function wf_claim_stale($state, array $node)
+{
+    if (!$state || empty($state['claimed_by'])) {
+        return false;
+    }
+    $u = user_by_id((int)$state['claimed_by']);
+    return !$u || !wf_user_can_process($u, $node);
+}
+
+// Освободить тему от такого сотрудника
+function wf_release_stale(array $thread, array $node)
+{
+    $st = wf_thread_state((int)$thread['id']);
+    if (wf_claim_stale($st, $node)) {
+        db_exec('UPDATE wf_threads SET claimed_by = NULL, claimed_at = NULL, updated_at = :t WHERE thread_id = :id AND claimed_by = :u',
+            ['t' => now(), 'id' => (int)$thread['id'], 'u' => (int)$st['claimed_by']]);
+        wf_event($thread, 'unclaim', ['target_user_id' => (int)$st['claimed_by']]);
+    }
+}
+
 // Взять тему на рассмотрение. Возвращает [ok, сообщение].
 function wf_claim(array $thread, array $node)
 {
@@ -554,6 +588,7 @@ function wf_claim(array $thread, array $node)
         return [false, wf_recused_text()];
     }
     $tid = (int)$thread['id'];
+    wf_release_stale($thread, $node);
     wf_state_row_ensure($tid);
     $n = db_exec('UPDATE wf_threads SET claimed_by = :u, claimed_at = :t, updated_at = :t2 WHERE thread_id = :id AND claimed_by IS NULL',
         ['u' => uid(), 't' => now(), 't2' => now(), 'id' => $tid]);
@@ -583,7 +618,7 @@ function wf_unclaim(array $thread, array $node)
         return [false, 'Тему пока никто не взял.'];
     }
     $was = (int)$st['claimed_by'];
-    if ($was !== uid() && !wf_is_supervisor($node)) {
+    if ($was !== uid() && !wf_is_supervisor($node) && !wf_claim_stale($st, $node)) {
         return [false, 'Снять с рассмотрения чужую тему может только старший администратор раздела.'];
     }
     if ($was !== uid() && wf_recused($thread)) {
@@ -644,7 +679,7 @@ function wf_can_verdict(array $node, $state)
         return false;
     }
     $by = $state ? (int)$state['claimed_by'] : 0;
-    return !$by || $by === uid() || wf_is_supervisor($node);
+    return !$by || $by === uid() || wf_is_supervisor($node) || wf_claim_stale($state, $node);
 }
 
 // Готовые ответы для раздела (активные), по порядку
@@ -666,13 +701,20 @@ function wf_macros_for($nodeId)
 }
 
 // Подстановки в готовом ответе
+// Значение для подстановки в BB-текст: без квадратных скобок, чтобы название темы от автора
+// не превратилось в ссылку или картинку внутри официального ответа
+function wf_fill_value($v)
+{
+    return str_replace(['[', ']'], ['(', ')'], (string)$v);
+}
+
 function wf_fill($text, array $thread, $staff)
 {
     $author = user_by_id($thread['user_id']);
     return strtr((string)$text, [
-        '{author}' => $author ? $author['username'] : 'автор',
-        '{staff}' => $staff ? $staff['username'] : 'Администрация',
-        '{thread}' => $thread['title'],
+        '{author}' => wf_fill_value($author ? $author['username'] : 'автор'),
+        '{staff}' => wf_fill_value($staff ? $staff['username'] : 'Администрация'),
+        '{thread}' => wf_fill_value($thread['title']),
         '{date}' => date('d.m.Y'),
     ]);
 }
@@ -861,12 +903,14 @@ function wf_as_user($u, $fn)
 }
 
 // От чьего имени пишет система: настройка, иначе $preferId (кто запросил доказательства), иначе главный администратор
-function wf_bot_user($preferId = 0)
+function wf_bot_user($preferId = 0, $node = null)
 {
     $id = setting_int('wf_bot_user_id');
     $u = $id ? user_by_id($id) : null;
     if ((!$u || !empty($u['is_banned'])) && $preferId) {
-        $u = user_by_id((int)$preferId);
+        // Сотрудник, запросивший доказательства, - только если он всё ещё может рассматривать раздел
+        $pu = user_by_id((int)$preferId);
+        $u = $pu && $node && wf_user_can_process($pu, $node) ? $pu : null;
     }
     if (!$u || !empty($u['is_banned'])) {
         $id = (int)db_val('SELECT u.id FROM users u JOIN user_groups g ON g.id = u.group_id WHERE g.can_admin = 1 AND u.is_banned = 0 ORDER BY g.level DESC, u.id ASC LIMIT 1');
@@ -911,7 +955,7 @@ function wf_cron_evidence($only = null)
     $done = 0;
     foreach ($rows as $t) {
         $node = node_get($t['node_id']);
-        $bot = wf_bot_user((int)($t['evidence_by'] ?: $t['wf_claimed_by']));
+        $bot = $node ? wf_bot_user((int)($t['evidence_by'] ?: $t['wf_claimed_by']), $node) : null;
         if (!$node || !$bot) {
             continue;
         }

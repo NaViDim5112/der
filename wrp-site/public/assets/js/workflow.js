@@ -14,7 +14,8 @@
       thread: holder.getAttribute('data-thread') || '',
       date: holder.getAttribute('data-date') || ''
     };
-    return String(text).replace(/\{(author|staff|thread|date)\}/g, function (m, k) { return map[k]; });
+    // Без квадратных скобок: название темы не должно стать BB-ссылкой или картинкой в ответе
+    return String(text).replace(/\{(author|staff|thread|date)\}/g, function (m, k) { return map[k].replace(/\[/g, '(').replace(/\]/g, ')'); });
   }
 
   function setCheck(form, name, on) {

@@ -35,6 +35,7 @@ function forum_header(array $o = [])
 <title><?= e($pageTitle) ?></title>
 <meta name="description" content="<?= e($o['description'] ?? setting('site_description')) ?>">
 <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
+<meta name="wrp-uid" content="<?= (int)uid() ?>">
 <meta name="base-path" content="<?= e(rtrim((string)cfg('base_path', ''), '/')) ?>">
 <link rel="icon" href="<?= e(asset('img/logo.svg')) ?>" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">

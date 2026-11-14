@@ -388,9 +388,9 @@ hook_add('page_scripts', function ($area, $o) {
     return '<script src="' . e(asset('js/moderation.js')) . '"></script>' . "\n";
 });
 
-// Значок жалоб в шапке для команды
+// Значок жалоб в шапке для модераторов (жалобы, в том числе на личные сообщения, видят только они)
 hook_add('header_icons', function ($u) {
-    if (!is_staff()) {
+    if (!can_moderate()) {
         return '';
     }
     $n = mdr_open_reports_count();
@@ -399,7 +399,7 @@ hook_add('header_icons', function ($u) {
 });
 
 hook_add('sidebar_user_links', function ($nav, $u) {
-    if (!is_staff()) {
+    if (!can_moderate()) {
         return '';
     }
     $n = mdr_open_reports_count();

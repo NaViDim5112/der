@@ -7,6 +7,21 @@
     return m ? m.getAttribute('content') : '';
   };
 
+  // Черновики и выбранные цитаты хранятся в браузере. Если в этом браузере вошёл другой человек
+  // (или вышли из аккаунта) - стираем их, чтобы чужой текст не всплыл у следующего пользователя.
+  try {
+    var uidNow = meta('wrp-uid');
+    if (uidNow !== '' && localStorage.getItem('wrp_uid') !== uidNow) {
+      for (var i = localStorage.length - 1; i >= 0; i--) {
+        var k = localStorage.key(i);
+        if (k && (k.indexOf('draft:') === 0 || k.indexOf('draft-at:') === 0 || k.indexOf('wrp_mq_') === 0)) {
+          localStorage.removeItem(k);
+        }
+      }
+      localStorage.setItem('wrp_uid', uidNow);
+    }
+  } catch (e) {}
+
   var WRP = window.WRP = {
     csrf: meta('csrf-token'),
     base: meta('base-path') || '',

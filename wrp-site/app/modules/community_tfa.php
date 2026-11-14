@@ -526,7 +526,7 @@ function com_tfa_tab_html(array $me)
 // ---------- Профиль: статус 2FA для команды, сброс для администрации ----------
 
 hook_add('member_info_rows', function ($m) {
-    if (!is_staff() || !com_ready()) {
+    if (!can_admin() || !com_ready()) {
         return '';
     }
     $on = com_tfa_enabled($m['id']);

@@ -329,7 +329,7 @@ function mdr_member_warnings_html(array $m)
         WHERE w.user_id = :u ORDER BY w.id DESC LIMIT 200', ['u' => $mid]);
     $total = mdr_points_active($mid);
     $rules = mdr_warning_rules();
-    $bans = db_all('SELECT b.*, t.title AS thread_title FROM mod_reply_bans b LEFT JOIN threads t ON t.id = b.thread_id
+    $bans = db_all('SELECT b.*, t.title AS thread_title, t.node_id AS thread_node_id, t.is_deleted AS thread_deleted FROM mod_reply_bans b LEFT JOIN threads t ON t.id = b.thread_id
         WHERE b.user_id = :u AND (b.expires_at IS NULL OR b.expires_at > :n) ORDER BY b.id DESC', ['u' => $mid, 'n' => now()]);
     $posts = [];
     foreach ($rows as $w) {
@@ -359,7 +359,11 @@ function mdr_member_warnings_html(array $m)
     if ($bans) {
         $h .= '<div class="mdr-bans-list">';
         foreach ($bans as $b) {
-            $h .= '<div class="mdr-ban-row">' . icon('ban') . '<span>' . ($b['thread_id'] ? 'Запрет ответов в теме «<a href="' . e(thread_url($b['thread_id'])) . '">' . e($b['thread_title'] ?? ('#' . $b['thread_id'])) . '</a>»' : 'Запрет писать на форуме')
+            // Название темы - только если её можно видеть (закрытый раздел, удалённая тема - без названия)
+            $tn = $b['thread_node_id'] ? node_get($b['thread_node_id']) : null;
+            $seeThread = $b['thread_title'] !== null && $tn && node_can_view($tn) && (!(int)$b['thread_deleted'] || can_moderate());
+            $where = $seeThread ? 'Запрет ответов в теме «<a href="' . e(thread_url($b['thread_id'])) . '">' . e($b['thread_title']) . '</a>»' : 'Запрет ответов в одной из тем';
+            $h .= '<div class="mdr-ban-row">' . icon('ban') . '<span>' . ($b['thread_id'] ? $where : 'Запрет писать на форуме')
                 . ' ' . ($b['expires_at'] ? 'до ' . e(fdate($b['expires_at'])) : 'навсегда') . ($b['reason'] ? '. Причина: ' . e($b['reason']) : '') . '</span></div>';
         }
         $h .= '</div>';

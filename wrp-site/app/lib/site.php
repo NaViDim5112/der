@@ -209,6 +209,7 @@ function site_header(array $o = [])
 <meta name="description" content="<?= e($description) ?>">
 <meta name="theme-color" content="#0c0a13">
 <meta name="csrf-token" content="<?= e(csrf_token()) ?>">
+<meta name="wrp-uid" content="<?= (int)uid() ?>">
 <meta name="base-path" content="<?= e(rtrim((string)cfg('base_path', ''), '/')) ?>">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="<?= e($siteName) ?>">

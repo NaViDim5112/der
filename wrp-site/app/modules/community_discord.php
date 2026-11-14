@@ -101,6 +101,12 @@ function com_webhook_matches(array $hook, array $node, $event, $prefixId = null)
     return true;
 }
 
+// Текст пользователя для Discord: без разметки Markdown (скрытые ссылки [текст](адрес), жирный и т.п.)
+function com_discord_md($s)
+{
+    return preg_replace('/([\\\\`*_~|>\[\]()#])/u', '\\\\$1', (string)$s);
+}
+
 // Сообщение для Discord (embed)
 function com_discord_payload($event, array $thread, array $node, array $extra = [])
 {
@@ -110,7 +116,7 @@ function com_discord_payload($event, array $thread, array $node, array $extra = 
     $prefix = !empty($thread['prefix_id']) && isset($prefixes[(int)$thread['prefix_id']]) ? $prefixes[(int)$thread['prefix_id']]['title'] : '';
     $author = $extra['author'] ?? null;
     $embed = [
-        'title' => mb_substr(($prefix !== '' ? '[' . $prefix . '] ' : '') . $thread['title'], 0, 250),
+        'title' => mb_substr(com_discord_md(($prefix !== '' ? '[' . $prefix . '] ' : '') . $thread['title']), 0, 250),
         'url' => $origin . thread_url($thread['id']),
         'color' => COM_DISCORD_COLOR,
         'fields' => [['name' => 'Раздел', 'value' => mb_substr($node['title'], 0, 200), 'inline' => true]],
@@ -124,7 +130,7 @@ function com_discord_payload($event, array $thread, array $node, array $extra = 
         $content = 'Новая тема в разделе «' . $node['title'] . '»';
         $excerpt = bbcode_plain((string)($extra['body'] ?? ''), 300);
         if ($excerpt !== '') {
-            $embed['description'] = $excerpt;
+            $embed['description'] = com_discord_md($excerpt);
         }
     } else {
         $content = 'Статус темы изменён' . ($prefix !== '' ? ': ' . $prefix : '');

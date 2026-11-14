@@ -16,7 +16,7 @@ if (is_post()) {
 $total = (int)db_val('SELECT COUNT(*) FROM alerts WHERE user_id = :u', ['u' => uid()]);
 $pg = paginate($total, 25, query_int('page', 1));
 $alerts = db_all('SELECT a.*, u.username AS actor_name, u.avatar AS actor_avatar, g.color AS actor_color,
-                         t.title AS thread_title, t.node_id AS thread_node_id
+                         t.title AS thread_title, t.node_id AS thread_node_id, t.is_deleted AS thread_deleted
                   FROM alerts a
                   LEFT JOIN users u ON u.id = a.actor_id
                   LEFT JOIN user_groups g ON g.id = u.group_id
@@ -56,9 +56,12 @@ forum_header([
   <?php if ($alerts): ?>
   <div class="alert-list">
     <?php foreach ($alerts as $a):
-        // Название темы скрываем, если раздел теперь недоступен
-        if (!empty($a['thread_node_id']) && !node_can_view(node_get($a['thread_node_id']))) {
+        // Название темы скрываем, если раздел теперь недоступен или тема удалена (и куда перенесли - тоже)
+        if (!empty($a['thread_node_id']) && (!node_can_view(node_get($a['thread_node_id'])) || (!empty($a['thread_deleted']) && !can_moderate()))) {
             $a['thread_title'] = 'скрытая тема';
+            if ($a['type'] === 'move') {
+                $a['extra'] = null;
+            }
         }
         $actor = $a['actor_id'] && $a['actor_name'] !== null ? fp_list_user($a['actor_id'], $a['actor_name'], $a['actor_avatar'], $a['actor_color']) : null;
         $ico = $typeIcons[$a['type']] ?? 'bell';
