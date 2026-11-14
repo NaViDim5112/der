@@ -931,6 +931,11 @@ function fp_thread_set_deleted(array $thread, $deleted)
 // Действие модератора над темой. Возвращает [ok, сообщение, адрес для перехода].
 function fp_mod_thread(array $thread, array $node, $do)
 {
+    // Модули могут запретить действие (например, отвод сотрудника, упомянутого в жалобе)
+    $deny = (string)hook_filter('thread_moderate_denied', '', $thread, $node, $do);
+    if ($deny !== '') {
+        return [false, $deny, thread_url((int)$thread['id'])];
+    }
     $r = fp_mod_thread_do($thread, $node, $do);
     if ($r[0]) {
         hook_fire('thread_moderated', $thread, $node, $do);

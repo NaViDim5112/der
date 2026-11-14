@@ -370,6 +370,32 @@ as_user('Martin_Line');
 list($ok, $msg) = wf_claim(thread_get($t12), node_get(21));
 t('в техразделе упоминание ника не мешает', $ok, $msg);
 
+// Отвод в обжалованиях, в меню модерации ядра, при снятии и передаче
+$t13 = new_thread('Roxas_Alexandro', 55, 'Обжалование наказания Roxas_Alexandro | выдал Ricardo_Calump', 1);
+as_user('Ricardo_Calump');
+list($ok) = wf_claim(thread_get($t13), node_get(55));
+t('выдавший наказание не рассматривает обжалование', !$ok);
+as_user('admin');
+list($ok, $msg) = wf_claim(thread_get($t13), node_get(55));
+t('обжалование берёт другой', $ok, $msg);
+as_user('Martin_Line');
+list($ok, $msg) = fp_mod_thread(thread_get($t10), node_get(52), 'lock');
+t('упомянутый не закрывает жалобу через меню модерации', !$ok && strpos($msg, 'упомянуты') !== false, $msg);
+t('закрепить может', fp_mod_thread(thread_get($t10), node_get(52), 'pin')[0]);
+fp_mod_thread(thread_get($t10), node_get(52), 'unpin');
+as_user('Diego_Bacardi');
+list($ok) = fp_mod_thread(thread_get($t10), node_get(52), 'lock');
+t('другой модератор закрывает', $ok && (int)thread_get($t10)['is_locked'] === 1);
+fp_mod_thread(thread_get($t10), node_get(52), 'unlock');
+$t14 = new_thread('Roxas_Alexandro', 52, 'Жалоба на Ricardo_Calump в игре', 1);
+as_user('Diego_Bacardi');
+wf_claim(thread_get($t14), node_get(52));
+as_user('Ricardo_Calump');
+list($ok) = wf_unclaim(thread_get($t14), node_get(52));
+t('упомянутый старший не снимает чужую тему', !$ok);
+list($ok) = wf_transfer(thread_get($t14), node_get(52), (int)user_by_name('Martin_Line')['id']);
+t('и не передаёт её', !$ok);
+
 echo "\n" . ($fails ? $fails . ' FAILED of ' . $total : 'ALL OK (' . $total . ')') . "\n";
 wf_test_cleanup();
 exit($fails ? 1 : 0);

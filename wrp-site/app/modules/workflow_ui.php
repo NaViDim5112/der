@@ -488,3 +488,16 @@ hook_add('sidebar_user_links', function ($nav, $u) {
     return '<a class="side-link" href="' . e(url('/forum/queue.php')) . '">' . icon('wf-inbox') . '<span>Очередь рассмотрения</span>'
         . ($n ? '<span class="wf-side-count">' . ($n > 99 ? '99+' : $n) . '</span>' : '') . '</a>';
 });
+
+// Отвод действует и на меню модерации ядра: упомянутый в жалобе сотрудник не ставит статус,
+// не закрывает, не переносит и не удаляет её (закрепить можно). Фоновые задачи не ограничиваются.
+hook_add('thread_moderate_denied', function ($deny, $thread, $node, $do) {
+    if ($deny !== '' || !empty($GLOBALS['wrp_cron']) || !wf_ready() || in_array($do, ['pin', 'unpin'], true)) {
+        return $deny;
+    }
+    $c = wf_cfg($node['id']);
+    if (!$c || !in_array($c['kind'], ['complaint', 'appeal', 'application', 'property'], true)) {
+        return $deny;
+    }
+    return wf_recused($thread) ? wf_recused_text() : $deny;
+});

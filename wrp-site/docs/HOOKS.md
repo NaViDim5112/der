@@ -86,6 +86,7 @@
 | `thread_before_posts` / `thread_after_posts` | html | `$thread`, `$node`, `$pg` | над и под сообщениями (опрос, ход рассмотрения) |
 | `thread_reply_form` | html | `$thread`, `$node` | внутри формы ответа, после поля текста |
 | `thread_reply_denied` | filter | `''`, `$thread`, `$node` | вернуть текст причины, если отвечать нельзя (бан ответов) |
+| `thread_moderate_denied` | filter | `''`, `$thread`, `$node`, `$do` | вернуть текст причины, чтобы запретить действие модерации (`fp_mod_thread`: lock, prefix, move, delete, ...) |
 
 ### Сообщение (`app/lib/forum_posts.php`)
 
@@ -133,6 +134,7 @@
 | `member_about_main` / `member_about_side` | html | `$m`: карточки на вкладке «Информация» |
 | `member_action` | fire | `$action`, `$m`, `$fail`, `$return`: POST-действие модуля (сам делает `redirect`) |
 | `wall_post_actions` / `wall_comment_actions` | html | `$p` / `$c`, `$ownerId` |
+| `wall_can_post` | filter | `true`, `$ownerId`: вернуть false, чтобы запретить писать на стенах (общий запрет писать) |
 
 ### Настройки аккаунта (`public/forum/account.php`)
 

@@ -169,8 +169,8 @@ function wf_can_process($node)
     return in_array((int)$node['id'], wf_my_staff_nodes(), true);
 }
 
-// Отвод: свою тему не рассматривают, а жалобу - и тот, чей ник (Имя_Фамилия) в ней упомянут
-// (жалоба на него, он свидетель или участник). $u - строка пользователя, по умолчанию текущий.
+// Отвод: свою тему не рассматривают, а жалобу и обжалование - и тот, чей ник (Имя_Фамилия) в них упомянут
+// (жалоба на него, он выдал обжалуемое наказание, свидетель или участник). $u - строка пользователя, по умолчанию текущий.
 function wf_recused(array $thread, $u = null)
 {
     $u = $u ?: user();
@@ -181,7 +181,7 @@ function wf_recused(array $thread, $u = null)
         return true;
     }
     $c = wf_cfg($thread['node_id']);
-    if (!$c || $c['kind'] !== 'complaint') {
+    if (!$c || !in_array($c['kind'], ['complaint', 'appeal'], true)) {
         return false;
     }
     static $texts = [];
@@ -586,6 +586,9 @@ function wf_unclaim(array $thread, array $node)
     if ($was !== uid() && !wf_is_supervisor($node)) {
         return [false, 'Снять с рассмотрения чужую тему может только старший администратор раздела.'];
     }
+    if ($was !== uid() && wf_recused($thread)) {
+        return [false, wf_recused_text()];
+    }
     db_exec('UPDATE wf_threads SET claimed_by = NULL, claimed_at = NULL, updated_at = :t WHERE thread_id = :id AND claimed_by = :u',
         ['t' => now(), 'id' => $tid, 'u' => $was]);
     mod_log('wf_unclaim', 'thread', $tid, $thread['title'] . ($was !== uid() ? ' (' . $st['claimed_name'] . ')' : ''));
@@ -608,6 +611,9 @@ function wf_transfer(array $thread, array $node, $toUserId)
     $was = $st ? (int)$st['claimed_by'] : 0;
     if ($was && $was !== uid() && !wf_is_supervisor($node)) {
         return [false, 'Передать чужую тему может только старший администратор раздела.'];
+    }
+    if ($was !== uid() && wf_recused($thread)) {
+        return [false, wf_recused_text()];
     }
     $to = user_by_id((int)$toUserId);
     if (!$to || !wf_user_can_process($to, $node)) {
