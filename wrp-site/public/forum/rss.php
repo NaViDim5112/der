@@ -30,5 +30,5 @@ if (isset($_GET['node'])) {
 
 $xml = cnt_rss_xml($node, 20);
 header('Content-Type: application/rss+xml; charset=utf-8');
-header('Cache-Control: public, max-age=300');
+header('Cache-Control: ' . (site_url_configured() ? 'public' : 'private') . ', max-age=300');
 echo $xml;

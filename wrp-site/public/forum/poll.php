@@ -63,7 +63,12 @@ if ($action === 'vote') {
         $fail('Управлять опросом могут автор темы и модераторы.', 403, $back);
     }
     $close = $action === 'close';
-    $data = ['is_closed' => $close ? 1 : 0];
+    // is_closed: 1 - закрыл автор, 2 - закрыл модератор (тогда открыть может только модератор)
+    if (!$close && (int)$poll['is_closed'] === 2 && !can_moderate()) {
+        $fail('Опрос закрыл модератор, открыть его может только модератор.', 403, $back);
+    }
+    $byMod = can_moderate() && (int)$thread['user_id'] !== uid();
+    $data = ['is_closed' => $close ? ($byMod ? 2 : 1) : 0];
     if (!$close && $poll['close_at'] && strtotime($poll['close_at']) <= time()) {
         $data['close_at'] = null;
     }

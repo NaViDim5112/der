@@ -382,7 +382,7 @@ function cnt_poll_html(array $poll, array $thread, $node, $flash = '')
         if ($voters === 0) {
             $h .= '<button type="button" data-poll-view="edit">' . icon('edit') . ' Изменить опрос</button>';
         }
-        if ($poll['is_closed']) {
+        if ($poll['is_closed'] && ($isMod || (int)$poll['is_closed'] !== 2)) {
             $h .= $form('open', 'Открыть опрос', 'unlock');
         } elseif (!$thread['is_locked']) {
             $h .= $form('close', 'Закрыть опрос', 'lock');

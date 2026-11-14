@@ -116,6 +116,11 @@ if (is_post()) {
             flash('error', 'Пользователь не найден.');
             redirect($self);
         }
+        // Чужие поля - только у тех, кто ниже по уровню (иначе можно подменить ссылки старшего администратора)
+        if ((int)$u['id'] !== uid() && (int)$u['level'] >= user_level()) {
+            flash('error', 'Нельзя менять поля пользователя с таким же или более высоким уровнем доступа.');
+            redirect(url('/admin/profile-fields.php', ['user' => $u['username']]) . '#user-values');
+        }
         $in = $_POST['f'] ?? [];
         $in = is_array($in) ? $in : [];
         $errs = [];

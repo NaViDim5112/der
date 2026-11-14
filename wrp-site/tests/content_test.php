@@ -390,7 +390,7 @@ if ($base) {
     $hdr = implode("\n", $http_response_header ?? []);
     $j = json_decode((string)$body, true);
     check('http api: 200 и JSON', is_array($j) && !empty($j['ok']) && count($j['items']) <= 3, $body);
-    check('http api: Cache-Control и CORS', stripos($hdr, 'Cache-Control: public, max-age=60') !== false && stripos($hdr, 'Access-Control-Allow-Origin: *') !== false, $hdr);
+    check('http api: Cache-Control и CORS', stripos($hdr, 'Cache-Control: ' . (site_url_configured() ? 'public' : 'private') . ', max-age=60') !== false && stripos($hdr, 'Access-Control-Allow-Origin: *') !== false, $hdr);
     check('http api: без cookie', stripos($hdr, 'Set-Cookie') === false, $hdr);
     $post = stream_context_create(['http' => ['method' => 'POST', 'ignore_errors' => true, 'content' => 'x=1', 'header' => 'Content-Type: application/x-www-form-urlencoded']]);
     @file_get_contents($base . '/api/news.php', false, $post);

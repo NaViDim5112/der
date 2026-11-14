@@ -325,10 +325,17 @@ hook_add('account_action', function ($action, $tab, $me) {
                 flash('info', 'Двухфакторная защита уже включена.');
                 redirect($back);
             }
-            if ($err = com_check_password($me, (string)($_POST['current_password'] ?? ''))) {
+            $plain = (string)($_POST['current_password'] ?? '');
+            if ($err = com_check_password($me, $plain)) {
                 flash('error', $err);
                 redirect($back);
             }
+            // Включая защиту, выходим на всех других устройствах: тот же пароль с новой солью
+            // (старые сеансы перестают совпадать) и без старых «Запомнить меня»
+            $remember = !empty($_COOKIE['wrp_remember']);
+            db_update('users', ['password_hash' => password_make($plain)], 'id = :id', ['id' => $uid]);
+            db_exec('DELETE FROM remember_tokens WHERE user_id = :u', ['u' => $uid]);
+            login_user(user_by_id($uid), $remember);
             $secret = com_totp_new_secret();
             db_exec('INSERT INTO com_tfa (user_id, secret_enc, is_enabled, last_step, backup_codes, enabled_at, created_at)
                      VALUES (:u, :s, 0, 0, NULL, NULL, :c)
@@ -366,8 +373,13 @@ hook_add('account_action', function ($action, $tab, $me) {
                 'backup_codes' => json_encode(com_tfa_backup_hashes($uid, $codes)),
                 'enabled_at' => now(),
             ], 'user_id = :u', ['u' => $uid]);
+            // «Запомнить меня», выданные до включения защиты, больше не пускают без кода
+            db_exec('DELETE FROM remember_tokens WHERE user_id = :u', ['u' => $uid]);
+            if (!empty($_COOKIE['wrp_remember'])) {
+                remember_issue($uid);
+            }
             $_SESSION['com_tfa_codes'] = $codes;
-            flash('success', 'Двухфакторная защита включена. Сохраните резервные коды!');
+            flash('success', 'Двухфакторная защита включена, на других устройствах выполнен выход. Сохраните резервные коды!');
             redirect($back);
             break;
 
@@ -436,7 +448,7 @@ function com_tfa_tab_html(array $me)
         $h .= '<section class="card com-tfa-intro">';
         $h .= '<div class="com-tfa-head"><span class="com-tfa-icon">' . icon('key') . '</span><div><h2 class="card-title">Двухфакторная защита</h2>'
             . '<p class="muted">Сейчас <b class="com-off">выключена</b>. При входе на форум, кроме пароля, нужно будет ввести код из приложения на телефоне. '
-            . 'Даже если пароль узнают, без телефона в аккаунт не войти.</p></div></div>';
+            . 'Даже если пароль узнают, без телефона в аккаунт не войти. При включении на остальных устройствах будет выполнен выход.</p></div></div>';
         $h .= '<ol class="com-steps"><li>Установите на телефон приложение для кодов: Google Authenticator, Яндекс Ключ, Microsoft Authenticator или Aegis.</li>'
             . '<li>Нажмите «Включить» и отсканируйте QR-код.</li><li>Введите код из приложения и сохраните резервные коды.</li></ol>';
         $h .= '<form method="post" class="form" action="' . e($self) . '">' . csrf_field() . '<input type="hidden" name="action" value="com_tfa_start">'
@@ -522,7 +534,7 @@ hook_add('member_info_rows', function ($m) {
 }, 30);
 
 hook_add('member_actions', function ($m, $isSelf) {
-    if ($isSelf || !can_admin() || !com_ready() || !com_tfa_enabled($m['id']) || (int)$m['level'] > user_level()) {
+    if ($isSelf || !can_admin() || !com_ready() || !com_tfa_enabled($m['id']) || (int)$m['level'] >= user_level()) {
         return '';
     }
     return '<form method="post" action="' . e(url('/forum/member.php', ['id' => (int)$m['id']])) . '" data-confirm="Сбросить двухфакторную защиту у ' . e($m['username']) . '? Делайте это, только если владелец аккаунта подтвердил личность.">'
@@ -534,7 +546,8 @@ hook_add('member_action', function ($action, $m, $fail, $return) {
     if ($action !== 'com_tfa_reset') {
         return;
     }
-    if (!can_admin() || (int)$m['level'] > user_level() || (int)$m['id'] === uid()) {
+    // Сбросить 2FA можно только тому, кто ниже по уровню
+    if (!can_admin() || (int)$m['level'] >= user_level() || (int)$m['id'] === uid()) {
         $fail('Нет прав на это действие.', 403);
     }
     if (com_ready() && db_exec('DELETE FROM com_tfa WHERE user_id = :u', ['u' => (int)$m['id']])) {

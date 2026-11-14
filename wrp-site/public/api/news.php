@@ -9,7 +9,8 @@ $out = function ($data, $code = 200, $cache = true) {
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     if ($cache) {
-        header('Cache-Control: public, max-age=60');
+        // Общий кэш (прокси, CDN) - только когда ссылки не зависят от заголовка Host
+        header('Cache-Control: ' . (site_url_configured() ? 'public' : 'private') . ', max-age=60');
         header('Access-Control-Allow-Origin: *');
     } else {
         header('Cache-Control: no-store');

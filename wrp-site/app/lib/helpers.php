@@ -78,11 +78,28 @@ function asset($path)
 }
 
 // Полный адрес текущего сайта (для ссылок вне сайта)
+// Схема и хост сайта для полных ссылок (RSS, API лаунчера, Discord, «Поделиться»).
+// Если в config.php задан 'site_url' (например https://world-rp.ru), берётся он: заголовок Host
+// присылает браузер, и подменённый Host не должен попадать в ссылки, которые кэшируются или уходят наружу.
 function site_origin()
 {
+    $conf = rtrim(trim((string)cfg('site_url', '')), '/');
+    if ($conf !== '' && preg_match('~^https?://[A-Za-z0-9.\-]+(?::\d{1,5})?$~', $conf)) {
+        return $conf;
+    }
     $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (($_SERVER['SERVER_PORT'] ?? '') == 443);
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+    if (!preg_match('~^[A-Za-z0-9.\-]{1,253}(?::\d{1,5})?$~', $host)) {
+        $host = 'localhost';
+    }
     return ($https ? 'https' : 'http') . '://' . $host;
+}
+
+// Задан ли адрес сайта в config.php (тогда полные ссылки не зависят от заголовка Host)
+function site_url_configured()
+{
+    $conf = rtrim(trim((string)cfg('site_url', '')), '/');
+    return $conf !== '' && preg_match('~^https?://[A-Za-z0-9.\-]+(?::\d{1,5})?$~', $conf) === 1;
 }
 
 function redirect($to)

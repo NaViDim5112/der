@@ -53,6 +53,7 @@ function com_discord_origin()
         $p = parse_url($s);
         return $p['scheme'] . '://' . $p['host'] . (isset($p['port']) ? ':' . $p['port'] : '');
     }
+    // Иначе адрес из config.php ('site_url'), а без него - текущий хост (его стоит задать в настройках Discord)
     return site_origin();
 }
 
@@ -294,6 +295,22 @@ function com_discord_process($limit = 10, $budget = 20)
             db_update('com_webhook_queue', ['status' => 'failed', 'last_error' => 'Вебхук выключен или удалён'], 'id = :id', ['id' => (int)$r['id']]);
             $stat['failed']++;
             continue;
+        }
+        // Тему могли удалить или перенести в закрытый раздел, пока событие ждало отправки
+        if (!empty($r['thread_id'])) {
+            $t = thread_get((int)$r['thread_id']);
+            $tn = $t ? node_get($t['node_id']) : null;
+            $why = '';
+            if (!$t || !empty($t['is_deleted']) || !$tn) {
+                $why = 'Тема удалена до отправки';
+            } elseif (empty($hook['is_internal']) && !site_node_public($tn)) {
+                $why = 'Тема перенесена в закрытый раздел до отправки';
+            }
+            if ($why !== '') {
+                db_update('com_webhook_queue', ['status' => 'failed', 'last_error' => $why], 'id = :id', ['id' => (int)$r['id']]);
+                $stat['failed']++;
+                continue;
+            }
         }
         $url = com_decrypt($hook['url_enc'], 'webhook');
         $err = '';
