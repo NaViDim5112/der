@@ -343,6 +343,24 @@ try {
     $GLOBALS['wrp_cron'] = false;
     t('IP не пишется из фоновых задач', (int)db_val('SELECT COUNT(*) FROM user_ips WHERE ip = :ip', ['ip' => '203.0.113.9']) === 0);
 
+    // ---------- Блокировка модератором и обжалование ----------
+    echo "\n-- Блокировка и обжалование\n";
+    as_user('Diego_Bacardi');
+    t('модератор блокирует до 30 дней, без «навсегда»', !isset(mdr_ban_terms()[0]) && isset(mdr_ban_terms()[30]));
+    as_user('Ricardo_Calump');
+    t('администратор может «навсегда»', isset(mdr_ban_terms()[0]));
+    $appealId = ban_appeal_node_id();
+    if ($appealId) {
+        db_update('users', ['is_banned' => 1, 'ban_reason' => 'тест', 'ban_until' => null], 'id = :id', ['id' => (int)$kuzya['id']]);
+        as_user('Kuzya_Kabanov');
+        t('заблокированный создаёт тему только в обжалованиях', node_can_thread(node_get($appealId)) && !node_can_thread(node_get(81)));
+        $own = ['id' => 999990, 'user_id' => (int)$kuzya['id'], 'is_deleted' => 0, 'is_locked' => 0, 'node_id' => $appealId];
+        $other = ['id' => 999991, 'user_id' => (int)$roxas['id'], 'is_deleted' => 0, 'is_locked' => 0, 'node_id' => $appealId];
+        t('отвечает в своём обжаловании', fp_reply_denied($own, node_get($appealId)) === '');
+        t('в чужом - нет', fp_reply_denied($other, node_get($appealId)) !== '');
+        db_update('users', ['is_banned' => 0, 'ban_reason' => null, 'ban_until' => null], 'id = :id', ['id' => (int)$kuzya['id']]);
+    }
+
     // ---------- Подписи журнала ----------
     t('подписи действий для журнала', adm_action_label('warning_add') === 'Предупреждение' && adm_action_label('reply_ban') === 'Запрет ответов');
     t('цель «жалоба» в журнале', strpos((string)hook_first('modlog_target', ['target_type' => 'report', 'target_id' => 5]), 'reports.php?id=5') !== false);

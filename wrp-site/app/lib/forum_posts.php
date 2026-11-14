@@ -385,8 +385,8 @@ function fp_reply_denied(array $thread, $node)
     if (!is_logged()) {
         return 'guest';
     }
-    if (is_banned()) {
-        return 'Ваш аккаунт заблокирован, отвечать в темах нельзя.';
+    if (is_banned() && !(is_ban_appeal_node($node) && (int)$thread['user_id'] === uid())) {
+        return 'Ваш аккаунт заблокирован, отвечать в темах нельзя.' . (ban_appeal_node_id() ? ' Отвечать можно только в своём обжаловании.' : '');
     }
     if ($thread['is_deleted'] && !can_moderate()) {
         return 'Тема удалена.';

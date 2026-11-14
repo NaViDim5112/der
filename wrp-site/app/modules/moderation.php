@@ -103,6 +103,16 @@ function mdr_punish_error($target)
     return '';
 }
 
+// Сроки блокировки на форуме: модератор - до 30 дней, навсегда - администратор (уровень от 60)
+function mdr_ban_terms()
+{
+    $t = [1 => '1 день', 3 => '3 дня', 7 => '7 дней', 14 => '14 дней', 30 => '30 дней'];
+    if (user_level() >= 60) {
+        $t[0] = 'Навсегда';
+    }
+    return $t;
+}
+
 // Снять наказание (предупреждение, запрет ответов) может тот, кто его выдал, или сотрудник не ниже его уровня
 function mdr_override_error($issuerId)
 {
@@ -450,6 +460,8 @@ hook_add('modlog_labels', function ($l) {
         'reply_unban' => 'Снят запрет ответов',
         'warning_type' => 'Вид предупреждения изменён',
         'warning_type_add' => 'Вид предупреждения создан',
+        'mod_ban' => 'Блокировка модератором',
+        'mod_unban' => 'Снятие блокировки модератором',
         'warning_type_del' => 'Вид предупреждения удалён',
         'warning_rule' => 'Порог баллов изменён',
         'warning_rule_del' => 'Порог баллов удалён',
@@ -619,6 +631,7 @@ hook_add('member_actions', function ($m, $isSelf) {
     }
     if (mdr_can_punish($m)) {
         $h .= '<a class="btn btn-pill btn-outline mdr-warn-btn" href="' . e(url('/forum/warn.php', ['user' => (int)$m['id']])) . '">' . icon('alert') . ' Предупреждение</a>';
+        $h .= '<a class="btn btn-pill btn-outline mdr-ban-btn" href="' . e(url('/forum/ban.php', ['user' => (int)$m['id']])) . '">' . icon('ban') . ' ' . (!empty($m['is_banned']) ? 'Блокировка' : 'Заблокировать') . '</a>';
     }
     return $h;
 });
@@ -664,11 +677,15 @@ hook_add('thread_reply_denied', function ($denied, $thread, $node) {
     $ban = mdr_safe(function () use ($thread) {
         return mdr_replyban_active(uid(), (int)$thread['id']);
     }, null);
+    // Общий запрет писать не мешает отвечать в своём обжаловании
+    if ($ban && !$ban['thread_id'] && is_ban_appeal_node($node) && (int)$thread['user_id'] === uid()) {
+        return $denied;
+    }
     return $ban ? mdr_replyban_text($ban) : $denied;
 });
 
 hook_add('new_thread_validate', function ($errors, $node, $useForm) {
-    if (!is_logged() || can_moderate()) {
+    if (!is_logged() || can_moderate() || is_ban_appeal_node($node)) {
         return $errors;
     }
     $ban = mdr_safe(function () {

@@ -29,6 +29,7 @@ function settings_defaults()
         'rules_node_id' => '0',
         'complaints_node_id' => '0',
         'tech_node_id' => '0',
+        'ban_appeal_node_id' => '0',
         'partners_text' => '',
         'footer_text' => 'World Role Play не связан с Rockstar Games и Take-Two Interactive.',
         'announcement' => '',

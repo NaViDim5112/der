@@ -80,7 +80,11 @@ if (is_post()) {
     $watch = input_bool('watch');
     // Модули проверяют свои поля (опрос, вложения): [поле => текст ошибки]
     $errors = hook_filter('new_thread_validate', $errors, $node, $useForm);
-    if (!$errors) {
+    // Заблокированный подаёт не больше одного обжалования в сутки
+    if (!$errors && is_banned() && !rate_ok('ban_appeal', 1, 86400)) {
+        $error = 'Обжалование уже подано. Следующее можно подать через сутки, а пока ответьте в своей теме.';
+    }
+    if (!$errors && $error === '') {
         $wait = fp_flood_wait();
         if ($wait > 0) {
             $error = 'Подождите ' . $wait . ' сек. перед созданием темы.';
@@ -88,6 +92,9 @@ if (is_post()) {
     }
     if (!$errors && $error === '') {
         $tid = fp_create_thread($node, $title, $prefixId, $body, ['pinned' => $pin, 'locked' => $lock, 'watch' => $watch]);
+        if (is_banned()) {
+            rate_hit('ban_appeal');
+        }
         flash('success', 'Тема создана.');
         redirect(thread_url($tid));
     }

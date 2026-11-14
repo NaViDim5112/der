@@ -74,8 +74,24 @@ function node_can_view($node, $level = null)
 }
 
 // Можно ли создавать темы
+// Раздел, где заблокированный на форуме может обжаловать блокировку (настройка ban_appeal_node_id)
+function ban_appeal_node_id()
+{
+    return setting_int('ban_appeal_node_id');
+}
+
+function is_ban_appeal_node($node)
+{
+    $id = ban_appeal_node_id();
+    return $id > 0 && $node && (int)$node['id'] === $id;
+}
+
 function node_can_thread($node)
 {
+    // Заблокированный может создать тему (обжалование) только в разделе обжалований
+    if ($node && $node['type'] === 'forum' && is_logged() && is_banned() && is_ban_appeal_node($node)) {
+        return node_can_view($node) && !$node['is_closed'];
+    }
     if (!$node || $node['type'] !== 'forum' || !is_logged() || is_banned()) {
         return false;
     }
@@ -88,6 +104,10 @@ function node_can_thread($node)
 // Можно ли отвечать в темах раздела (без учёта закрытия темы)
 function node_can_reply($node)
 {
+    // В разделе обжалований заблокированный отвечает только в своей теме (проверяет fp_reply_denied)
+    if ($node && is_logged() && is_banned() && is_ban_appeal_node($node)) {
+        return node_can_view($node) && !$node['is_closed'];
+    }
     if (!$node || !is_logged() || is_banned()) {
         return false;
     }

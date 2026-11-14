@@ -209,7 +209,8 @@ function forum_header(array $o = [])
     <div class="announcement"><?= icon('megaphone') ?><div><?= bbcode(setting('announcement')) ?></div></div>
     <?php endif; ?>
     <?php if (is_banned()): ?>
-    <div class="flash flash-error"><?= icon('ban') ?><div>Ваш аккаунт заблокирован<?= user()['ban_until'] ? ' до ' . e(fdate(user()['ban_until'])) : '' ?>. <?= user()['ban_reason'] ? 'Причина: ' . e(user()['ban_reason']) : '' ?></div></div>
+    <?php $appealNode = ban_appeal_node_id() ? node_get(ban_appeal_node_id()) : null; ?>
+    <div class="flash flash-error"><?= icon('ban') ?><div>Ваш аккаунт заблокирован<?= user()['ban_until'] ? ' до ' . e(fdate(user()['ban_until'])) : '' ?>. <?= user()['ban_reason'] ? 'Причина: ' . e(user()['ban_reason']) . '. ' : '' ?><?php if ($appealNode): ?>Не согласны - <a href="<?= e(url('/forum/new-thread.php', ['node' => (int)$appealNode['id']])) ?>">подайте обжалование</a>.<?php endif; ?></div></div>
     <?php endif; ?>
     <?= hook_html('page_notices', 'forum', $o) ?>
     <?php foreach (flashes() as $f): ?>
