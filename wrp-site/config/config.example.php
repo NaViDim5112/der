@@ -38,6 +38,23 @@ return [
     // SameSite для cookie входа: 'Lax' (обычно) или 'None' (только для iframe с другого адреса и только по HTTPS).
     'cookie_samesite' => 'Lax',
 
+    // Почта: восстановление пароля по email и подтверждение email при регистрации (README, раздел «Почта»).
+    // transport: 'smtp' - через почтовый ящик, 'mail' - функция mail() сервера, 'log' - в storage/logs/mail.log (для проверки).
+    // Ссылки в письмах работают только при заданном 'site_url'.
+    'mail' => [
+        'enabled'   => false,
+        'transport' => 'smtp',
+        'from'      => 'noreply@example.com',
+        'from_name' => 'World Role Play',
+        'smtp'      => [
+            'host'   => 'smtp.yandex.ru',
+            'port'   => 465,
+            'secure' => 'ssl',   // 'ssl' (порт 465) или 'tls' (порт 587)
+            'user'   => '',      // адрес ящика
+            'pass'   => '',      // пароль приложения, не обычный пароль от почты
+        ],
+    ],
+
     // Секрет для подписи cookie. Установщик генерирует случайный.
     'secret' => 'change-me',
 

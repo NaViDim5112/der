@@ -45,8 +45,9 @@ if ($open && is_post()) {
     }
 
     if (!$errors) {
+        $confirm = email_confirm_required() && email_confirm_ready();
         try {
-            $id = db_insert('users', [
+            $row = [
                 'username' => $v['username'],
                 'email' => $v['email'],
                 'password_hash' => password_make($pass),
@@ -54,11 +55,26 @@ if ($open && is_post()) {
                 'created_at' => now(),
                 'last_activity' => now(),
                 'last_ip' => client_ip(),
-            ]);
+            ];
+            if ($confirm) {
+                $row['email_confirmed'] = 0;
+            }
+            $id = db_insert('users', $row);
         } catch (PDOException $ex) {
             // Одновременная регистрация с тем же именем или email
             $id = 0;
             $errors['_'] = 'Это имя или email только что заняли. Выберите другие.';
+        }
+        if ($id && $confirm) {
+            // Войти можно будет после ссылки из письма
+            rate_hit('register');
+            $_SESSION['confirm_uid'] = ['id' => (int)$id, 'until' => time() + 1800];
+            if (email_confirm_send(user_by_id($id))) {
+                flash('success', 'Аккаунт создан! Мы отправили письмо на ' . $v['email'] . ': откройте ссылку из него, чтобы подтвердить почту и войти.');
+            } else {
+                flash('error', 'Аккаунт создан, но письмо отправить не удалось. Попробуйте отправить его ещё раз чуть позже.');
+            }
+            redirect(url('/forum/confirm-email.php'));
         }
         if ($id) {
             rate_hit('register');

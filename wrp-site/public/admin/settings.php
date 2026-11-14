@@ -12,7 +12,7 @@ $nodeKeys = [
     'tech_node_id' => ['Технический раздел', 'Куда ведёт кнопка «Тех. поддержка».'],
     'ban_appeal_node_id' => ['Обжалование для заблокированных', 'Здесь заблокированный на форуме может подать одно обжалование в сутки и отвечать в своей теме. Не выбран - заблокированные не пишут нигде.'],
 ];
-$checkKeys = ['server_query', 'registration_open'];
+$checkKeys = ['server_query', 'registration_open', 'email_confirm'];
 
 $v = [];
 foreach ($keys as $k) {
@@ -181,6 +181,7 @@ $field = function ($k, $label, $hint = '', $attrs = '', $type = 'text') use ($v,
   <div class="card" id="sec-forum">
     <div class="adm-card-head"><div><h2><?= icon('chats') ?> Форум</h2><p>Регистрация, ограничения и важные разделы.</p></div></div>
     <label class="adm-opt"><input type="checkbox" name="registration_open" value="1"<?= adm_chk($v['registration_open'] === '1') ?>><span><b>Регистрация открыта</b><small>Снимите галочку, чтобы временно запретить новые регистрации на сайте.</small></span></label>
+    <label class="adm-opt"><input type="checkbox" name="email_confirm" value="1"<?= adm_chk($v['email_confirm'] === '1') ?>><span><b>Подтверждение email при регистрации</b><small><?= mail_enabled() ? 'Новый пользователь войдёт, только открыв ссылку из письма. Защищает от ботов и чужих адресов.' : 'Сначала настройте почту в config.php (README, раздел «Почта»): пока она не работает, галочка ни на что не влияет.' ?></small></span></label>
     <div class="form-grid">
       <?= $field('threads_per_page', 'Тем на странице', 'Сколько тем показывать в списке раздела (5-100).', 'min="5" max="100" required', 'number') ?>
       <?= $field('posts_per_page', 'Сообщений на странице', 'Сколько сообщений на одной странице темы (5-100).', 'min="5" max="100" required', 'number') ?>

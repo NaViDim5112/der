@@ -88,6 +88,14 @@ if (is_post()) {
         $form = 'ban';
     }
 
+    if ($action === 'confirm_email') {
+        // Подтвердить почту вручную (письмо не дошло, пользователь написал администрации)
+        db_update('users', ['email_confirmed' => 1], 'id = :id', ['id' => $id]);
+        mod_log('user_email_confirm', 'user', $id, (string)$raw['email']);
+        flash('success', 'Почта ' . $raw['username'] . ' отмечена как подтверждённая.');
+        redirect($back);
+    }
+
     if ($action === 'unban') {
         db_update('users', ['is_banned' => 0, 'ban_reason' => null, 'ban_until' => null], 'id = :id', ['id' => $id]);
         mod_log('user_unban', 'user', $id, $raw['ban_reason'] ? 'Была причина: ' . $raw['ban_reason'] : '');
@@ -331,6 +339,13 @@ if ($editId) {
         <?php if ($raw['is_banned']): ?><span class="tag tag-danger"><?= icon('ban') ?> Бан<?= $raw['ban_until'] ? ' до ' . e(fdate($raw['ban_until'])) : ' навсегда' ?></span><?php endif; ?>
         <?php if ($isOnline): ?><span class="tag tag-success"><?= icon('eye') ?> Онлайн</span><?php endif; ?>
         <?php if ($isSelf): ?><span class="tag tag-info">Это вы</span><?php endif; ?>
+        <?php if (email_unconfirmed($raw)): ?>
+        <span class="tag tag-warning"><?= icon('mail') ?> Почта не подтверждена</span>
+        <form method="post" action="<?= e($self) ?>" class="inline-form">
+          <?= csrf_field() ?><input type="hidden" name="action" value="confirm_email"><input type="hidden" name="id" value="<?= $id ?>">
+          <button class="btn btn-sm btn-ghost" type="submit"><?= icon('check') ?> Подтвердить вручную</button>
+        </form>
+        <?php endif; ?>
       </div>
     </div>
     <div class="btn-row" style="margin-left:auto">

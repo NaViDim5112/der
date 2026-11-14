@@ -431,6 +431,7 @@ function adm_action_labels()
         'unban' => 'Снятие блокировки',
         'db_migrate' => 'Обновление базы сайта',
         'admin_action' => 'Действие в админ-панели',
+        'user_email_confirm' => 'Почта подтверждена вручную',
     ] + (array)hook_filter('modlog_labels', []);
 }
 

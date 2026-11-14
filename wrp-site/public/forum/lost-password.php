@@ -12,10 +12,38 @@ if ($discord !== '' && !preg_match('~^https?://~i', $discord)) {
     $discord = '';
 }
 $gameOn = game_enabled();
+$mailOn = mail_enabled() && mail_links_ok() && email_confirm_ready();
 $errors = [];
-$v = ['username' => '', 'game_nick' => ''];
+$v = ['username' => '', 'game_nick' => '', 'login' => ''];
 
-if ($gameOn && is_post()) {
+// Восстановление по email: ответ всегда одинаковый, чтобы по нему нельзя было узнать, есть ли такой аккаунт
+if ($mailOn && is_post() && input('method') === 'email') {
+    csrf_check();
+    $v['login'] = acc_clean_line(input('login'));
+    if ($v['login'] === '') {
+        $errors['login'] = 'Введите email или имя пользователя.';
+    } elseif (!rate_ok('lost_email', 5, 900)) {
+        $errors['_mail'] = 'Слишком много попыток. Подождите 15 минут и попробуйте снова.';
+    } else {
+        rate_hit('lost_email');
+        $u = strpos($v['login'], '@') !== false
+            ? db_one('SELECT id FROM users WHERE email = :e', ['e' => $v['login']])
+            : user_by_name($v['login']);
+        $u = $u ? user_by_id($u['id']) : null;
+        if ($u && filter_var((string)$u['email'], FILTER_VALIDATE_EMAIL) && !user_token_recent($u['id'], 'reset', 300)) {
+            $raw = user_token_create($u['id'], 'reset', 3600);
+            $site = (string)setting('site_name');
+            mail_send($u['email'], 'Восстановление пароля - ' . $site,
+                "Здравствуйте, " . $u['username'] . "!\n\nКто-то (возможно, вы) запросил восстановление пароля на форуме " . $site
+                . ". Чтобы задать новый пароль, откройте ссылку (действует 1 час):\n" . site_origin() . url('/forum/reset-password.php', ['token' => $raw])
+                . "\n\nЕсли вы не запрашивали восстановление, просто удалите письмо: пароль останется прежним.\n\n" . $site);
+        }
+        flash('success', 'Если аккаунт с такими данными есть, мы отправили на его почту письмо со ссылкой. Проверьте входящие и папку «Спам».');
+        redirect(url('/forum/lost-password.php'));
+    }
+}
+
+if ($gameOn && is_post() && input('method') !== 'email') {
     csrf_check();
     $v['username'] = acc_clean_line(input('username'));
     $v['game_nick'] = acc_clean_line(input('game_nick'));
@@ -77,6 +105,22 @@ forum_header([
 <div class="auth-wrap auth-wrap-wide">
   <div class="card auth-card">
     <h2 class="card-title">Забыли пароль?</h2>
+    <?php if ($mailOn): ?>
+    <h3 class="acc-subtitle"><?= icon('mail') ?> Восстановить по email</h3>
+    <p class="muted small">Укажите почту или имя пользователя: пришлём ссылку, по которой можно задать новый пароль.</p>
+    <?php if (!empty($errors['_mail'])): ?><div class="flash flash-error"><?= icon('alert') ?><div><?= e($errors['_mail']) ?></div></div><?php endif; ?>
+    <form method="post" class="form" action="<?= e(url('/forum/lost-password.php')) ?>" novalidate>
+      <?= csrf_field() ?>
+      <input type="hidden" name="method" value="email">
+      <div class="form-row">
+        <label class="label" for="lp-login">Email или имя пользователя</label>
+        <input class="input<?= acc_invalid($errors, 'login') ?>" id="lp-login" name="login" value="<?= e($v['login']) ?>" maxlength="191" autocomplete="email" required>
+        <?= acc_field_error($errors, 'login') ?>
+      </div>
+      <button class="btn btn-white btn-pill btn-lg btn-block" type="submit"><?= icon('send') ?> Прислать ссылку</button>
+    </form>
+    <h3 class="acc-subtitle">Другие способы</h3>
+    <?php endif; ?>
     <div class="acc-steps">
       <div class="acc-step">
         <div class="acc-step-icon"><?= icon('shield') ?></div>

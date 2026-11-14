@@ -2,6 +2,18 @@
 require __DIR__ . '/../../app/bootstrap.php';
 require_admin();
 
+// Проверка почты: тестовое письмо на свой email
+if (is_post() && input('action') === 'mail_test') {
+    csrf_check();
+    $me = user();
+    if (mail_send($me['email'], 'Проверка почты - ' . setting('site_name'), "Это проверочное письмо с сайта " . setting('site_name') . ". Почта работает.")) {
+        flash('success', 'Письмо отправлено на ' . $me['email'] . '. Проверьте входящие и папку «Спам».');
+    } else {
+        flash('error', 'Письмо не отправлено: ' . mail_last_error());
+    }
+    redirect(url('/admin/'));
+}
+
 // Обновление базы сайта (новые файлы sql/migrations)
 if (is_post() && input('action') === 'migrate') {
     csrf_check();
@@ -66,6 +78,12 @@ foreach ($dirs as $label => $path) {
 }
 if (is_dir(WRP_PUBLIC . '/install')) {
     $checks[] = ['warn', 'Папка установщика', 'public/install', 'Удалите папку public/install после установки - иначе кто-то может запустить установку заново.'];
+}
+$mailOn = mail_enabled();
+$checks[] = [$mailOn ? 'ok' : 'warn', 'Почта (восстановление пароля, подтверждение email)', $mailOn ? mail_conf()['transport'] : 'не настроена',
+    $mailOn ? '' : 'Без почты пароль восстанавливают только через администрацию или игровой аккаунт. Настройте блок mail в config/config.php (README, раздел «Почта»).'];
+if ($mailOn && !site_url_configured()) {
+    $checks[] = ['warn', 'Адрес сайта для писем', 'не задан', 'Укажите \'site_url\' в config/config.php: без него ссылки в письмах отключены (защита от подмены адреса).'];
 }
 if (cfg('debug')) {
     $checks[] = ['warn', 'Режим отладки включён', "'debug' => true", 'На рабочем сайте выключите его в config/config.php: посетители могут увидеть технические ошибки.'];
@@ -225,6 +243,13 @@ $tiles = hook_filter('admin_tiles', $tiles);
       <h2><?= icon($problems ? 'alert' : 'check') ?> Проверка сервера сайта</h2>
       <p><?= $problems ? 'Есть замечания: ' . $problems . '. Исправьте их, чтобы сайт работал надёжно.' : 'Всё в порядке.' ?></p>
     </div>
+    <?php if ($mailOn): ?>
+    <form method="post" action="<?= e(url('/admin/')) ?>">
+      <?= csrf_field() ?>
+      <input type="hidden" name="action" value="mail_test">
+      <button class="btn btn-sm btn-ghost" type="submit"><?= icon('mail') ?> Проверить почту</button>
+    </form>
+    <?php endif; ?>
   </div>
   <div class="adm-checks">
     <?php foreach ($checks as $c): ?>

@@ -21,6 +21,7 @@ function settings_defaults()
         'telegram_url' => '',
         'youtube_url' => '',
         'registration_open' => '1',
+        'email_confirm' => '0',
         'threads_per_page' => '20',
         'posts_per_page' => '15',
         'flood_seconds' => '15',
