@@ -294,6 +294,55 @@ try {
     t('IP записан с числом заходов', (int)db_val('SELECT hits FROM user_ips WHERE user_id = :u AND ip = :ip', ['u' => (int)$kuzya['id'], 'ip' => '10.1.2.3']) === 2);
     t('два аккаунта на одном IP', (int)db_val('SELECT COUNT(DISTINCT user_id) FROM user_ips WHERE ip = :ip', ['ip' => '10.1.2.3']) === 2);
 
+    // ---------- Исправления после проверки безопасности ----------
+    echo "\n-- Исправления\n";
+    db_exec('DELETE FROM mod_reply_bans');
+    db_exec('DELETE FROM rate_limits');
+    $kPost = db_one('SELECT * FROM posts WHERE user_id = :u AND is_deleted = 0 ORDER BY id LIMIT 1', ['u' => (int)$kuzya['id']]);
+    $kThread = $kPost ? thread_get($kPost['thread_id']) : null;
+    $kNode = $kThread ? node_get($kThread['node_id']) : null;
+    as_user('admin');
+    mdr_replyban_add(null, (int)$kuzya['id'], 0, 'проверка');
+    as_user('Kuzya_Kabanov');
+    $errE = hook_filter('post_edit_validate', [], $kPost, $kThread, $kNode);
+    t('под запретом нельзя править свои сообщения', $kPost && !empty($errE['body']), json_encode($errE, JSON_UNESCAPED_UNICODE));
+    t('под общим запретом нельзя писать на стенах', !acc_wall_can_post((int)$roxas['id']));
+    as_user('Martin_Line');
+    t('без запрета стена доступна', acc_wall_can_post((int)$kuzya['id']));
+    // Порог с запретом писать не ослабляет ручной запрет и снимает только свой
+    as_user('admin');
+    $manualId = (int)db_val('SELECT id FROM mod_reply_bans WHERE user_id = :u AND thread_id IS NULL', ['u' => (int)$kuzya['id']]);
+    $autoId = mdr_replyban_add(null, (int)$kuzya['id'], 3, 'порог', false);
+    t('запрет от порога - отдельной строкой', (int)db_val('SELECT COUNT(*) FROM mod_reply_bans WHERE user_id = :u AND thread_id IS NULL', ['u' => (int)$kuzya['id']]) === 2);
+    db_exec('DELETE FROM mod_reply_bans WHERE id = :id', ['id' => $autoId]);
+    $act = mdr_replyban_active((int)$kuzya['id'], 999999);
+    t('ручной бессрочный запрет остаётся', (int)db_val('SELECT COUNT(*) FROM mod_reply_bans WHERE id = :id', ['id' => $manualId]) === 1);
+    db_exec('DELETE FROM mod_reply_bans');
+    // Младший не снимает наказание старшего
+    as_user('Diego_Bacardi');
+    t('модератор не снимает наказание администратора', mdr_override_error((int)$ricardo['id']) !== '');
+    t('своё наказание снять можно', mdr_override_error((int)$diego['id']) === '');
+    as_user('Ricardo_Calump');
+    t('администратор снимает наказание модератора', mdr_override_error((int)$diego['id']) === '');
+    // История правок не растёт без конца
+    $hp = ['id' => 999998, 'body' => 'v0', 'created_at' => now(), 'edited_at' => null, 'edited_by' => null, 'user_id' => (int)$kuzya['id']];
+    db_exec('DELETE FROM post_edits WHERE post_id = 999998');
+    for ($i = 0; $i < MDR_HISTORY_MAX + 7; $i++) {
+        $hp['body'] = 'v' . $i;
+        mdr_history_store($hp);
+        mdr_history_store($hp);
+    }
+    $hrows = db_all('SELECT body FROM post_edits WHERE post_id = 999998 ORDER BY id');
+    t('хранится не больше ' . MDR_HISTORY_MAX . ' версий', count($hrows) === MDR_HISTORY_MAX, (string)count($hrows));
+    t('исходная версия сохраняется', $hrows && $hrows[0]['body'] === 'v0');
+    t('повтор того же текста не плодит версии', count(array_unique(array_column($hrows, 'body'))) === count($hrows));
+    db_exec('DELETE FROM post_edits WHERE post_id = 999998');
+    // Фоновые задачи не пишут IP посетителя
+    $GLOBALS['wrp_cron'] = true;
+    mdr_ip_log((int)$admin['id'], '203.0.113.9');
+    $GLOBALS['wrp_cron'] = false;
+    t('IP не пишется из фоновых задач', (int)db_val('SELECT COUNT(*) FROM user_ips WHERE ip = :ip', ['ip' => '203.0.113.9']) === 0);
+
     // ---------- Подписи журнала ----------
     t('подписи действий для журнала', adm_action_label('warning_add') === 'Предупреждение' && adm_action_label('reply_ban') === 'Запрет ответов');
     t('цель «жалоба» в журнале', strpos((string)hook_first('modlog_target', ['target_type' => 'report', 'target_id' => 5]), 'reports.php?id=5') !== false);

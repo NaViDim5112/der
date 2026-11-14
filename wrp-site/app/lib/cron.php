@@ -28,6 +28,13 @@ function cron_run_due($force = false)
         return [];
     }
     $ran = [];
+    // Задачи идут без посетителя: не от его имени и не с его IP
+    // (иначе системные ответы получили бы IP случайного посетителя)
+    $savedUser = $GLOBALS['wrp_user'] ?? null;
+    $savedIp = $_SERVER['REMOTE_ADDR'] ?? null;
+    $GLOBALS['wrp_user'] = null;
+    $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
+    $GLOBALS['wrp_cron'] = true;
     try {
         $state = [];
         foreach (db_all('SELECT name, last_run FROM cron_state') as $r) {
@@ -41,10 +48,11 @@ function cron_run_due($force = false)
             $status = 'ok';
             try {
                 call_user_func($job['cb']);
-            } catch (Exception $e) {
+            } catch (Throwable $e) {
                 $status = mb_substr('ошибка: ' . $e->getMessage(), 0, 250);
                 error_log('[cron ' . $name . '] ' . $e);
             }
+            $GLOBALS['wrp_user'] = null;
             db_exec('INSERT INTO cron_state (name, last_run, last_status) VALUES (:n, :t, :s)
                      ON DUPLICATE KEY UPDATE last_run = VALUES(last_run), last_status = VALUES(last_status)',
                 ['n' => $name, 't' => now(), 's' => $status]);
@@ -52,6 +60,13 @@ function cron_run_due($force = false)
         }
     } finally {
         db_val('SELECT RELEASE_LOCK(:n)', ['n' => 'wrp_cron']);
+        $GLOBALS['wrp_user'] = $savedUser;
+        $GLOBALS['wrp_cron'] = false;
+        if ($savedIp === null) {
+            unset($_SERVER['REMOTE_ADDR']);
+        } else {
+            $_SERVER['REMOTE_ADDR'] = $savedIp;
+        }
     }
     return $ran;
 }

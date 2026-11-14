@@ -17,7 +17,7 @@ function mdr_replyban_active($userId, $threadId)
     if (!array_key_exists($key, $cache)) {
         $cache[$key] = db_one('SELECT b.*, t.title AS thread_title FROM mod_reply_bans b LEFT JOIN threads t ON t.id = b.thread_id
             WHERE b.user_id = :u AND (b.thread_id = :t OR b.thread_id IS NULL) AND (b.expires_at IS NULL OR b.expires_at > :n)
-            ORDER BY b.thread_id IS NULL, b.id DESC LIMIT 1', ['u' => (int)$userId, 't' => (int)$threadId, 'n' => now()]);
+            ORDER BY b.thread_id IS NULL, b.expires_at IS NULL DESC, b.expires_at DESC, b.id DESC LIMIT 1', ['u' => (int)$userId, 't' => (int)$threadId, 'n' => now()]);
     }
     return $cache[$key];
 }
@@ -34,12 +34,14 @@ function mdr_replyban_text(array $b)
 }
 
 // Выдать запрет (заменяет прежний в той же теме). $threadId null - во всём форуме. Возвращает id.
-function mdr_replyban_add($threadId, $userId, $days, $reason)
+// $replace = false - добавить отдельной строкой, не трогая другие запреты (запреты от порогов предупреждений:
+// каждый порог снимает только свой запрет и не ослабляет запрет, выданный модератором вручную).
+function mdr_replyban_add($threadId, $userId, $days, $reason, $replace = true)
 {
     $userId = (int)$userId;
-    if ($threadId) {
+    if ($replace && $threadId) {
         db_exec('DELETE FROM mod_reply_bans WHERE user_id = :u AND thread_id = :t', ['u' => $userId, 't' => (int)$threadId]);
-    } else {
+    } elseif ($replace) {
         db_exec('DELETE FROM mod_reply_bans WHERE user_id = :u AND thread_id IS NULL', ['u' => $userId]);
     }
     $until = (int)$days > 0 ? date('Y-m-d H:i:s', time() + (int)$days * 86400) : null;
@@ -90,7 +92,7 @@ function mdr_thread_replyban_box(array $thread)
                 . ' <span class="muted small">' . ($b['expires_at'] ? 'до ' . e(fdate($b['expires_at'])) : 'навсегда')
                 . ($b['by_name'] ? ' · выдал(а) ' . e($b['by_name']) : '') . '</span>'
                 . ($b['reason'] ? '<div class="small">' . e($b['reason']) . '</div>' : '') . '</div>';
-            if (can_moderate()) {
+            if (can_moderate() && mdr_override_error($b['banned_by']) === '') {
                 $h .= '<form method="post" action="' . e(url('/forum/moderation.php')) . '" class="inline-form" data-confirm="Снять запрет ответов?">' . csrf_field()
                     . '<input type="hidden" name="action" value="replyunban"><input type="hidden" name="id" value="' . (int)$b['id'] . '">'
                     . '<button class="btn btn-sm btn-ghost" type="submit">' . icon('undo') . ' Снять</button></form>';
@@ -130,9 +132,17 @@ function mdr_thread_replyban_box(array $thread)
 
 // ---------- История правок ----------
 
+// Сколько версий хранить на сообщение: исходная и последние (MDR_HISTORY_MAX - 1)
+const MDR_HISTORY_MAX = 50;
+
 // Сохранить текст сообщения перед правкой (точка post_before_update)
 function mdr_history_store(array $post)
 {
+    $pid = (int)$post['id'];
+    $last = db_one('SELECT id, body FROM post_edits WHERE post_id = :p ORDER BY id DESC LIMIT 1', ['p' => $pid]);
+    if ($last && (string)$last['body'] === (string)$post['body']) {
+        return;
+    }
     db_insert('post_edits', [
         'post_id' => (int)$post['id'],
         'body' => (string)$post['body'],
@@ -141,6 +151,13 @@ function mdr_history_store(array $post)
         'editor_id' => uid() ?: null,
         'edited_at' => now(),
     ]);
+    // Не даём истории расти без конца: оставляем исходную версию и самые новые
+    $ids = array_map('intval', array_column(db_all('SELECT id FROM post_edits WHERE post_id = :p ORDER BY id ASC', ['p' => $pid]), 'id'));
+    if (count($ids) > MDR_HISTORY_MAX) {
+        $drop = array_slice($ids, 1, count($ids) - MDR_HISTORY_MAX);
+        $in = db_in($drop, 'd');
+        db_exec('DELETE FROM post_edits WHERE id IN (' . $in['sql'] . ')', $in['params']);
+    }
 }
 
 // Версии сообщения, новые сначала: [body, at, by (id), kind: current / edit / original / early]

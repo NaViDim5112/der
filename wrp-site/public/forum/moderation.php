@@ -43,6 +43,15 @@ if ($action === 'replyunban') {
         flash('error', 'Запрет уже снят.');
         redirect(fp_referer(url('/forum/')));
     }
+    $back = $b['thread_id'] ? thread_url($b['thread_id']) : url('/forum/member.php', ['id' => (int)$b['user_id'], 'tab' => 'warnings']);
+    $err = mdr_punish_error(user_by_id($b['user_id']));
+    if ($err === '') {
+        $err = mdr_override_error($b['banned_by']);
+    }
+    if ($err !== '') {
+        flash('error', $err);
+        redirect($back);
+    }
     mdr_replyban_remove($b);
     flash('success', 'Запрет ответов снят.');
     redirect($b['thread_id'] ? thread_url($b['thread_id']) : url('/forum/member.php', ['id' => (int)$b['user_id'], 'tab' => 'warnings']));
@@ -56,6 +65,9 @@ if ($action === 'warn_revoke') {
     $back = url('/forum/member.php', ['id' => (int)$w['user_id'], 'tab' => 'warnings']);
     $target = user_by_id($w['user_id']);
     $err = mdr_punish_error($target);
+    if ($err === '') {
+        $err = mdr_override_error($w['issued_by']);
+    }
     if ($err !== '') {
         flash('error', $err);
         redirect($back);

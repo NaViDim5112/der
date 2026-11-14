@@ -742,7 +742,9 @@ function acc_delete_button($action, $id, $ownerId, $return, $question)
 // Можно ли писать на стене владельца
 function acc_wall_can_post($ownerId, array $ignoredBy = [])
 {
-    return is_logged() && !is_banned() && empty($ignoredBy[(int)$ownerId]);
+    $ok = is_logged() && !is_banned() && empty($ignoredBy[(int)$ownerId]);
+    // Модули могут запретить (например, общий запрет писать на форуме)
+    return $ok && (bool)hook_filter('wall_can_post', true, (int)$ownerId);
 }
 
 // Блок «игнорируемый пользователь» вокруг содержимого

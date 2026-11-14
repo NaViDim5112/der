@@ -23,17 +23,20 @@ if (!$isAuthor && !is_staff()) {
     abort(403, 'Историю правок видят автор сообщения и команда форума.');
 }
 
-$versions = mdr_post_versions($post);
-$users = mdr_users_by_ids(array_map(function ($v) {
-    return (int)$v['by'];
-}, $versions));
-$count = count($versions);
+$all = mdr_post_versions($post);
+$count = count($all);
 $hasEarly = false;
-foreach ($versions as $v) {
+foreach ($all as $v) {
     if ($v['kind'] === 'early') {
         $hasEarly = true;
     }
 }
+// По 10 версий на страницу: сравнение считается только для показанных
+$pg = paginate($count, 10, query_int('page', 1));
+$versions = array_slice($all, $pg['offset'], $pg['per_page'], true);
+$users = mdr_users_by_ids(array_map(function ($v) {
+    return (int)$v['by'];
+}, $versions));
 $author = fp_author($post);
 
 $crumbs = node_crumbs($node['id']);
@@ -66,11 +69,15 @@ $kinds = ['current' => 'Текущая', 'original' => 'Исходная', 'earl
   <?php elseif ($hasEarly): ?>
   <div class="flash flash-info"><?= icon('info') ?><div>Первые правки сделаны до включения истории: самая старая сохранённая версия может отличаться от исходного текста.</div></div>
   <?php endif; ?>
+  <?php if ($count > MDR_HISTORY_MAX): ?>
+  <div class="flash flash-info"><?= icon('info') ?><div>Хранятся исходная версия и <?= MDR_HISTORY_MAX - 1 ?> последних, более старые промежуточные правки удалены.</div></div>
+  <?php endif; ?>
+  <?= pagination_html($pg, '/forum/post-history.php', ['id' => $pid]) ?>
 
   <?php foreach ($versions as $i => $v):
       $num = $count - $i;
       $by = $users[(int)$v['by']] ?? mdr_user_row(0, null);
-      $older = $versions[$i + 1] ?? null;
+      $older = $all[$i + 1] ?? null;
   ?>
   <article class="card mdr-version<?= $v['kind'] === 'current' ? ' is-current' : '' ?>" id="v<?= $num ?>">
     <header class="mdr-version-head">
@@ -95,6 +102,7 @@ $kinds = ['current' => 'Текущая', 'original' => 'Исходная', 'earl
     </details>
   </article>
   <?php endforeach; ?>
+  <?= pagination_html($pg, '/forum/post-history.php', ['id' => $pid]) ?>
 </div>
 <?php
 forum_footer();

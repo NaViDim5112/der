@@ -103,6 +103,23 @@ function mdr_punish_error($target)
     return '';
 }
 
+// Снять наказание (предупреждение, запрет ответов) может тот, кто его выдал, или сотрудник не ниже его уровня
+function mdr_override_error($issuerId)
+{
+    static $cache = [];
+    $issuerId = (int)$issuerId;
+    if ($issuerId <= 0 || $issuerId === uid()) {
+        return '';
+    }
+    if (!array_key_exists($issuerId, $cache)) {
+        $issuer = user_by_id($issuerId);
+        $cache[$issuerId] = $issuer && mdr_level_of($issuer) > user_level()
+            ? 'Это наказание выдал(а) ' . $issuer['username'] . ': снять его может он(а) или сотрудник не ниже по уровню.'
+            : '';
+    }
+    return $cache[$issuerId];
+}
+
 // ---------- Справочники ----------
 
 function mdr_report_reasons()
@@ -315,6 +332,9 @@ function mdr_content_preview($body, $class = '')
 
 function mdr_ip_log($userId, $ip = null)
 {
+    if (!empty($GLOBALS['wrp_cron'])) {
+        return; // системные действия фоновых задач - не вход человека
+    }
     $userId = (int)$userId;
     $ip = $ip === null ? client_ip() : (string)$ip;
     if ($userId <= 0 || $ip === '') {
@@ -647,6 +667,36 @@ hook_add('new_thread_validate', function ($errors, $node, $useForm) {
     return $errors;
 });
 
+// Запрет ответов действует и на правку своих сообщений (иначе его обходят правкой старых).
+// И правки не чаще 20 за 10 минут: каждая правка сохраняется в истории.
+hook_add('post_edit_validate', function ($errors, $post, $thread, $node) {
+    if (!is_logged() || can_moderate()) {
+        return $errors;
+    }
+    if (!rate_ok('post_edit', 20, 600)) {
+        $errors['body'] = 'Слишком частые правки. Подождите несколько минут.';
+        return $errors;
+    }
+    $ban = mdr_safe(function () use ($thread) {
+        return mdr_replyban_active(uid(), (int)$thread['id']);
+    }, null);
+    if ($ban) {
+        $errors['body'] = mdr_replyban_text($ban);
+    }
+    return $errors;
+});
+
+// Общий запрет писать на форуме закрывает и стены профилей
+hook_add('wall_can_post', function ($ok, $ownerId) {
+    if (!$ok || !is_logged() || can_moderate()) {
+        return $ok;
+    }
+    $ban = mdr_safe(function () {
+        return mdr_replyban_active(uid(), 0);
+    }, null);
+    return $ban ? false : $ok;
+});
+
 hook_add('new_thread_form', function ($node, $useForm, $errors) {
     if (empty($errors['mdr_noreply'])) {
         return '';
@@ -660,6 +710,9 @@ hook_add('post_before_update', function ($post, $body, $thread, $node) {
     mdr_safe(function () use ($post) {
         mdr_history_store($post);
     }, null);
+    if (is_logged() && !can_moderate()) {
+        rate_hit('post_edit');
+    }
 });
 
 hook_add('user_logged_in', function ($u) {

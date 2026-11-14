@@ -192,7 +192,7 @@ function mdr_warn_escalate($userId, $warningId = null)
         $reason = 'Предупреждения: ' . mdr_points_text($total) . ' (порог ' . (int)$r['points'] . ')';
         $row = ['user_id' => $userId, 'rule_id' => $rid, 'warning_id' => $warningId ? (int)$warningId : null, 'points' => $total, 'created_at' => now()];
         if ($r['action'] === 'noreply') {
-            $row['reply_ban_id'] = mdr_replyban_add(null, $userId, (int)$r['days'], $reason);
+            $row['reply_ban_id'] = mdr_replyban_add(null, $userId, (int)$r['days'], $reason, false);
             $until = (int)$r['days'] > 0 ? date('Y-m-d H:i:s', time() + (int)$r['days'] * 86400) : '';
             alert_add($userId, 'mod_penalty', uid() ?: null, null, null, 'noreply|' . $until);
         } else {
@@ -405,7 +405,7 @@ function mdr_member_warnings_html(array $m)
                 . ($staff && $w['revoke_reason'] ? '. Причина: ' . e($w['revoke_reason']) : '') . '</div>';
         }
         $h .= '</div>';
-        if ($active && $canPunish) {
+        if ($active && $canPunish && mdr_override_error($w['issued_by']) === '') {
             $h .= '<form method="post" action="' . e(url('/forum/moderation.php')) . '" class="mdr-revoke" data-confirm="Снять это предупреждение? Баллы пересчитаются.">' . csrf_field()
                 . '<input type="hidden" name="action" value="warn_revoke"><input type="hidden" name="id" value="' . (int)$w['id'] . '">'
                 . '<input class="input mdr-revoke-reason" name="reason" maxlength="255" placeholder="Причина снятия">'
