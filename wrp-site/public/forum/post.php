@@ -180,6 +180,13 @@ if (is_post()) {
         } elseif (!$prefixId && $node['require_prefix'] && $nodePrefixes) {
             $errors['prefix'] = 'Выберите префикс.';
         }
+        // Смена префикса при правке - то же действие, что в меню модерации (отвод и другие запреты модулей)
+        if (!isset($errors['prefix']) && $prefixId !== (int)$thread['prefix_id']) {
+            $deny = (string)hook_filter('thread_moderate_denied', '', $thread, $node, 'prefix');
+            if ($deny !== '') {
+                $errors['prefix'] = $deny;
+            }
+        }
     }
     $err = fp_body_error($body);
     if ($err) {
@@ -217,6 +224,8 @@ if (is_post()) {
                     mod_log('thread_prefix', 'thread', $tid, $thread['title'] . ' -> ' . $ptitle);
                 }
                 alert_add($thread['user_id'], 'prefix', uid(), $tid, null, $ptitle);
+                // Модули узнают о смене статуса так же, как из меню модерации (рассмотрение, Discord)
+                hook_fire('thread_moderated', $thread, $node, 'prefix');
             }
         }
         if ($changed && $isMod && (int)$post['user_id'] !== uid()) {

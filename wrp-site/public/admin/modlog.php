@@ -65,6 +65,8 @@ function adm_modlog_target($r)
             return '<span class="muted small">Раздел</span><br><a href="' . e(url('/forum/forum.php', ['id' => $id])) . '">' . e($r['node_title']) . '</a>';
         case 'group':
             return '<span class="muted small">Группа</span><br>#' . $id;
+        case 'admin_page':
+            return '<span class="muted small">Админ-панель</span>';
         case 'profile_post':
         case 'profile_comment':
             return '<span class="muted small">' . ($r['target_type'] === 'profile_post' ? 'Сообщение в профиле' : 'Комментарий в профиле') . '</span><br>#' . $id;

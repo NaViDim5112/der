@@ -325,7 +325,19 @@ function mdr_content_preview($body, $class = '')
     if (trim((string)$body) === '') {
         return '<div class="mdr-preview muted ' . e($class) . '">Текста нет.</div>';
     }
-    return '<div class="mdr-preview bb ' . e($class) . '">' . bbcode($body) . '</div>';
+    // Цитаты чужих сообщений убираем вверх под спойлер: сначала виден текст самого автора
+    $quotes = [];
+    $own = (string)$body;
+    for ($i = 0; $i < 10 && preg_match('~\[quote(?:=[^\]]*)?\]((?:(?!\[quote[\]=]).)*?)\[/quote\]~is', $own, $m); $i++) {
+        $quotes[] = $m[0];
+        $own = str_replace($m[0], '', $own);
+    }
+    $own = trim($own);
+    $h = '<div class="mdr-preview bb ' . e($class) . '">' . ($own !== '' ? bbcode($own) : '<span class="muted">Только цитата, своего текста нет.</span>');
+    if ($quotes) {
+        $h .= '<details class="mdr-quotes"><summary class="muted small">' . icon('quote') . ' Цитаты в сообщении (' . count($quotes) . ')</summary>' . bbcode(implode("\n", $quotes)) . '</details>';
+    }
+    return $h . '</div>';
 }
 
 // ---------- IP-адреса ----------
@@ -437,6 +449,7 @@ hook_add('modlog_labels', function ($l) {
         'reply_ban' => 'Запрет ответов',
         'reply_unban' => 'Снят запрет ответов',
         'warning_type' => 'Вид предупреждения изменён',
+        'warning_type_add' => 'Вид предупреждения создан',
         'warning_type_del' => 'Вид предупреждения удалён',
         'warning_rule' => 'Порог баллов изменён',
         'warning_rule_del' => 'Порог баллов удалён',

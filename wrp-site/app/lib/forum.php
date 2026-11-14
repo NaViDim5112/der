@@ -679,6 +679,7 @@ function mod_log($action, $targetType, $targetId, $details = '')
     if (!is_logged()) {
         return;
     }
+    $GLOBALS['wrp_modlog_done'] = true;
     db_insert('mod_log', [
         'user_id' => uid(),
         'action' => $action,

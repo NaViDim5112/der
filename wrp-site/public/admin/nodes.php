@@ -602,7 +602,7 @@ if ($isEdit || $isNew) {
     </div>
     <div class="fb-row-body">
       <div class="form-row"><label class="label">Ключ для заголовка</label><input class="input input-sm fb-key" data-k="key" maxlength="32" placeholder="создастся сам" title="Латинские буквы, цифры и _"></div>
-      <div class="form-row" data-fb-show="text,textarea,url,number"><label class="label">Подсказка внутри поля</label><input class="input input-sm" data-k="placeholder" maxlength="120" placeholder="Серый текст в пустом поле"></div>
+      <div class="form-row" data-fb-show="text,textarea,url,number,nick"><label class="label">Подсказка внутри поля</label><input class="input input-sm" data-k="placeholder" maxlength="120" placeholder="Серый текст в пустом поле"></div>
       <div class="form-row" data-fb-show="text,textarea,url,number"><label class="label">Макс. длина</label><input class="input input-sm" data-k="max" type="number" min="1" max="10000" placeholder="по умолчанию"></div>
       <div class="form-row" data-fb-show="checkbox"><label class="label">Текст у галочки</label><input class="input input-sm" data-k="text" maxlength="120" placeholder="Да"></div>
       <div class="form-row fb-wide" data-fb-show="radio,select"><label class="label">Варианты ответа (каждый с новой строки)</label><textarea class="textarea textarea-sm" data-k="options" rows="3" placeholder="Вариант 1&#10;Вариант 2"></textarea></div>

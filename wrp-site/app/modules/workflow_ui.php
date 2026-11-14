@@ -218,7 +218,12 @@ function wf_status_box(array $thread, array $node)
     $h .= '</ol>';
 
     // Ожидание доказательств
-    if ($evWait) {
+    if ($evWait && wf_evidence_answered($thread, $st)) {
+        $isAuthor = $me && (int)$thread['user_id'] === $me;
+        $h .= '<div class="wf-evidence is-answered">' . icon('check') . '<div>'
+            . ($isAuthor ? '<b>Ответ получен.</b> Сотрудник проверит доказательства и вынесет решение.' : '<b>Автор ответил на запрос доказательств.</b> Проверьте ответ и вынесите решение.')
+            . '</div></div>';
+    } elseif ($evWait) {
         $hours = max(1, setting_int('wf_evidence_hours'));
         $since = $st && $st['evidence_at'] ? strtotime($st['evidence_at']) : strtotime($thread['last_post_at']);
         $until = $since + $hours * 3600;

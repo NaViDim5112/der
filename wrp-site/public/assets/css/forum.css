@@ -254,6 +254,8 @@
 .scroll-btns { position: fixed; right: 18px; bottom: 22px; z-index: 35; display: grid; gap: 8px; }
 .scroll-btns button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-strong); background: var(--panel); color: var(--text); display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow); }
 .scroll-btns button:hover { background: var(--panel-3); }
+/* На телефоне кнопки «вверх / вниз» закрывают кнопки у правого края страницы */
+@media (max-width: 560px) { .scroll-btns { display: none; } }
 
 /* ---------- Списки тем (общие для раздела, поиска, профиля) ---------- */
 

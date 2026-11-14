@@ -199,6 +199,12 @@ function csrf_check()
 function flash($type, $message)
 {
     $_SESSION['flash'][] = ['type' => $type, 'message' => $message];
+    // Журнал админ-панели: успешное действие, которое страница сама не записала в журнал модерации,
+    // записывается текстом сообщения («Префикс «...» сохранён.»)
+    if ($type === 'success' && empty($GLOBALS['wrp_modlog_done']) && is_post() && function_exists('mod_log')
+        && preg_match('~/admin/([a-z0-9\-]+)\.php$~', (string)($_SERVER['SCRIPT_NAME'] ?? ''), $m)) {
+        mod_log('admin_action', 'admin_page', 0, $m[1] . ': ' . $message);
+    }
 }
 
 function flashes()

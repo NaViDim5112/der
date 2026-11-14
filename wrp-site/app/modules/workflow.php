@@ -1072,10 +1072,48 @@ hook_add('thread_moderated', function ($thread, $node, $do) {
     }
 });
 
+// ---------- Ответ автора на запрос доказательств ----------
+
+// SQL: автор ответил после запроса доказательств (t - threads, w - wf_threads)
+function wf_answered_sql()
+{
+    return 'EXISTS (SELECT 1 FROM posts pa WHERE pa.thread_id = t.id AND pa.user_id = t.user_id AND pa.is_deleted = 0
+        AND pa.created_at > COALESCE(w.evidence_at, t.created_at) AND pa.id <> t.first_post_id)';
+}
+
+function wf_evidence_answered(array $thread, $st)
+{
+    $since = $st && !empty($st['evidence_at']) ? $st['evidence_at'] : $thread['created_at'];
+    return (bool)db_val('SELECT 1 FROM posts WHERE thread_id = :t AND user_id = :u AND is_deleted = 0 AND created_at > :s AND id <> :f LIMIT 1',
+        ['t' => (int)$thread['id'], 'u' => (int)$thread['user_id'], 's' => $since, 'f' => (int)$thread['first_post_id']]);
+}
+
+// Автор ответил в теме с «Ожиданием доказательств» - сообщить тому, кто рассматривает
+hook_add('post_created', function ($postId, $thread, $node) {
+    if (!$thread || !wf_ready() || !empty($GLOBALS['wrp_cron'])) {
+        return;
+    }
+    try {
+        $ev = setting_int('wf_evidence_prefix_id');
+        if (!$ev || (int)$thread['prefix_id'] !== $ev || (int)$thread['user_id'] !== uid() || !wf_cfg($node['id'])) {
+            return;
+        }
+        $st = wf_thread_state((int)$thread['id']);
+        $to = $st ? (int)($st['claimed_by'] ?: $st['evidence_by']) : 0;
+        if ($to && $to !== uid()) {
+            alert_add($to, 'wf_answer', uid(), (int)$thread['id'], (int)$postId);
+        }
+    } catch (Exception $e) {
+        error_log('[workflow] ' . $e->getMessage());
+    }
+});
+
 // ---------- Оповещения ----------
 
 hook_add('alert_text', function ($text, $a, $actor, $title) {
     switch ($a['type']) {
+        case 'wf_answer':
+            return $actor . ' ответил(а) на запрос доказательств в теме ' . $title . ' - проверьте и вынесите решение';
         case 'wf_claim':
             return $actor . ' взял(а) на рассмотрение ' . e($a['extra'] ?: 'вашу тему') . ' ' . $title;
         case 'wf_transfer':

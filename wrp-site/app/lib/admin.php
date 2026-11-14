@@ -430,6 +430,7 @@ function adm_action_labels()
         'ban' => 'Блокировка',
         'unban' => 'Снятие блокировки',
         'db_migrate' => 'Обновление базы сайта',
+        'admin_action' => 'Действие в админ-панели',
     ] + (array)hook_filter('modlog_labels', []);
 }
 

@@ -23,7 +23,9 @@ if (is_post()) {
                 redirect($next);
             }
             login_user($u, input_bool('remember'));
-            flash('success', 'С возвращением, ' . $u['username'] . '!');
+            if (!is_banned()) {
+                flash('success', 'С возвращением, ' . $u['username'] . '!');
+            }
             redirect($return);
         }
         rate_hit('login');

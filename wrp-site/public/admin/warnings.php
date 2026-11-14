@@ -45,12 +45,13 @@ if (is_post()) {
         }
         if (!$errors) {
             $data = ['title' => $typeForm['title'], 'points' => $points, 'expiry_days' => $days, 'public_note' => $typeForm['public_note'], 'display_order' => $order];
+            $isNew = !$id;
             if ($id) {
                 db_update('mod_warning_types', $data, 'id = :id', ['id' => $id]);
             } else {
                 $id = db_insert('mod_warning_types', $data);
             }
-            mod_log('warning_type', 'warning_type', $id, $typeForm['title'] . ': ' . $points . ' б., ' . ($days ? $days . ' дн.' : 'бессрочно'));
+            mod_log($isNew ? 'warning_type_add' : 'warning_type', 'warning_type', $id, $typeForm['title'] . ': ' . $points . ' б., ' . ($days ? $days . ' дн.' : 'бессрочно'));
             flash('success', 'Вид предупреждения «' . $typeForm['title'] . '» сохранён.');
             redirect($self . '#types');
         }

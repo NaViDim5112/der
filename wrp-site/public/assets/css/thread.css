@@ -479,7 +479,7 @@ dialog.modal::backdrop { background: rgba(5, 4, 10, .6); backdrop-filter: blur(3
 
   .compose-title-row { flex-direction: column; }
   .compose-prefix.select, .compose-prefix-fixed { height: 42px; }
-  .compose-title-input.input { height: 46px; font-size: 16px; }
+  .compose-title-input.input { height: 46px; font-size: 16px; flex: none; }
   .compose-hint-btn { display: none; }
   .search-main { flex-wrap: wrap; }
   .search-main .btn { width: 100%; }

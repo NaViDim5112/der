@@ -17,6 +17,7 @@ $filters = [
     'mine' => 'Мои',
     'overdue' => 'Просроченные',
     'evidence' => 'Ждут доказательств',
+    'answered' => 'Автор ответил',
 ];
 $f = query_str('f', 'all');
 if (!isset($filters[$f])) {
@@ -48,8 +49,9 @@ $counts = db_one('SELECT COUNT(*) AS c_all,
         COALESCE(SUM(w.claimed_by IS NULL), 0) AS c_free,
         COALESCE(SUM(w.claimed_by = :me), 0) AS c_mine,
         COALESCE(SUM(' . $overdueSql . '), 0) AS c_overdue,
-        COALESCE(SUM(t.prefix_id = :ev), 0) AS c_evidence
-    FROM ' . $from . ' WHERE ' . $base, array_merge($in['params'], ['me' => uid(), 'now' => now(), 'ev' => $ev]));
+        COALESCE(SUM(t.prefix_id = :ev AND NOT ' . wf_answered_sql() . '), 0) AS c_evidence,
+        COALESCE(SUM(t.prefix_id = :ev2 AND ' . wf_answered_sql() . '), 0) AS c_answered
+    FROM ' . $from . ' WHERE ' . $base, array_merge($in['params'], ['me' => uid(), 'now' => now(), 'ev' => $ev, 'ev2' => $ev]));
 
 $where = $base;
 $params = $in['params'];
@@ -62,7 +64,10 @@ if ($f === 'free') {
     $where .= ' AND ' . $overdueSql;
     $params['now'] = now();
 } elseif ($f === 'evidence') {
-    $where .= ' AND t.prefix_id = :ev';
+    $where .= ' AND t.prefix_id = :ev AND NOT ' . wf_answered_sql();
+    $params['ev'] = $ev;
+} elseif ($f === 'answered') {
+    $where .= ' AND t.prefix_id = :ev AND ' . wf_answered_sql();
     $params['ev'] = $ev;
 }
 $total = (int)$counts['c_' . $f];
@@ -87,6 +92,10 @@ $back = current_url();
 $rowActions = function ($t) use ($back) {
     if (wf_list_claim($t)) {
         return '';
+    }
+    // Своя тема или жалоба, где упомянут ваш ник: взять нельзя
+    if (wf_recused($t)) {
+        return '<span class="wf-take-off muted small" title="' . e(wf_recused_text()) . '">' . icon('info') . '<span class="hide-sm">Отвод</span></span>';
     }
     return '<form method="post" action="' . e(url('/forum/workflow.php')) . '" class="wf-take">' . csrf_field()
         . '<input type="hidden" name="action" value="claim"><input type="hidden" name="thread_id" value="' . (int)$t['id'] . '">'

@@ -203,7 +203,7 @@
         var ph = g(row, 'placeholder').value.trim();
         var hint = g(row, 'hint').value.trim();
         var max = parseInt(g(row, 'max').value, 10);
-        if (ph && ['text', 'textarea', 'url', 'number'].indexOf(type) !== -1) f.placeholder = ph;
+        if (ph && ['text', 'textarea', 'url', 'number', 'nick'].indexOf(type) !== -1) f.placeholder = ph;
         if (hint) f.hint = hint;
         if (max > 0 && ['text', 'textarea', 'url', 'number'].indexOf(type) !== -1) f.max = max;
         if (type === 'radio' || type === 'select') {

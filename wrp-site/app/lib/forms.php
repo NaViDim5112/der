@@ -13,13 +13,14 @@
 //     ...
 //   ]
 // }
-// Типы полей: text, textarea, url, date, number, radio, select, checkbox.
+// Типы полей: text, textarea, url, date, time, number, nick, radio, select, checkbox.
 // Для radio и select нужен "options": ["Вариант 1", "Вариант 2"], для checkbox - "text": "Да".
 
 function form_types()
 {
     return ['text' => 'Строка', 'textarea' => 'Большой текст', 'url' => 'Ссылка (скриншот, видео)', 'date' => 'Дата',
-        'number' => 'Число', 'radio' => 'Выбор одного варианта', 'select' => 'Выпадающий список', 'checkbox' => 'Галочка (согласие)'];
+        'time' => 'Время (ЧЧ:ММ)', 'number' => 'Целое число', 'nick' => 'Игровой ник (Имя_Фамилия)',
+        'radio' => 'Выбор одного варианта', 'select' => 'Выпадающий список', 'checkbox' => 'Галочка (согласие)'];
 }
 
 // Приводит описание анкеты к единому виду. null - если полей нет.
@@ -142,8 +143,18 @@ function form_input(array $form, array $post)
                 }
                 break;
             case 'number':
-                if (!is_numeric($v)) {
-                    $errors[$k] = 'Нужно число.';
+                if (!preg_match('~^\d{1,9}$~', $v)) {
+                    $errors[$k] = 'Нужно целое число без минуса и дробей.';
+                }
+                break;
+            case 'nick':
+                if (!preg_match('~^[A-Za-z]{2,20}_[A-Za-z]{2,20}$~', $v)) {
+                    $errors[$k] = 'Ник в формате Имя_Фамилия латиницей, например Ivan_Petrov.';
+                }
+                break;
+            case 'time':
+                if (!preg_match('~^([01]?\d|2[0-3]):[0-5]\d$~', $v)) {
+                    $errors[$k] = 'Время в формате ЧЧ:ММ, например 21:10.';
                 }
                 break;
             case 'radio':
@@ -266,8 +277,18 @@ function form_fields_html(array $form, array $values = [], array $errors = [])
             case 'date':
                 $h .= '<input class="input xf-date" type="date" id="' . e($id) . '" name="' . e($name) . '" value="' . e($v) . '"' . $req . '>';
                 break;
+            case 'time':
+                $h .= '<input class="input xf-date" type="time" id="' . e($id) . '" name="' . e($name) . '" value="' . e($v) . '"' . $req . '>';
+                break;
+            case 'nick':
+                $h .= '<input class="input" type="text" id="' . e($id) . '" name="' . e($name) . '" value="' . e($v) . '" maxlength="41" pattern="[A-Za-z]{2,20}_[A-Za-z]{2,20}" autocomplete="off" spellcheck="false"'
+                    . ' title="Ник в формате Имя_Фамилия латиницей" placeholder="' . e($f['placeholder'] !== '' ? $f['placeholder'] : 'Имя_Фамилия') . '"' . $req . '>';
+                break;
+            case 'number':
+                $h .= '<input class="input" type="number" min="0" step="1" inputmode="numeric" id="' . e($id) . '" name="' . e($name) . '" value="' . e($v) . '" placeholder="' . e($f['placeholder']) . '"' . $req . '>';
+                break;
             default:
-                $type = $f['type'] === 'url' ? 'url' : ($f['type'] === 'number' ? 'number' : 'text');
+                $type = $f['type'] === 'url' ? 'url' : 'text';
                 $h .= '<input class="input" type="' . $type . '" id="' . e($id) . '" name="' . e($name) . '" value="' . e($v) . '" maxlength="' . (int)$f['max'] . '" placeholder="' . e($f['placeholder']) . '"' . $req . '>';
         }
         if ($f['hint'] !== '') {
