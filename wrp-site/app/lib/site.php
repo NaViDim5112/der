@@ -336,6 +336,7 @@ function site_footer()
     </div>
   </div>
 </footer>
+<?= hook_html('page_footer', 'site', $o) ?>
 <script src="<?= e(asset('js/app.js')) ?>"></script>
 <script src="<?= e(asset('js/site.js')) ?>"></script>
 <?php foreach ($o['js'] ?? [] as $js): ?>

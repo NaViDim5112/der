@@ -1,0 +1,37 @@
+/* Режим игрового устройства (ноутбук, компьютер, планшет в доме): подключается только при ?device=... */
+
+/* Без фоновых эффектов и подвала: встроенный браузер игры слабее обычного */
+html.device-mode .bg-glow,
+html.device-mode .footer,
+html.device-mode .site-footer,
+html.device-mode .scroll-btns { display: none !important; }
+html.device-mode body { background-attachment: scroll; }
+html.device-mode * { scroll-behavior: auto; }
+
+/* Ноутбук и планшет: экран узкий, правая колонка уходит вниз, меню слева свёрнуто */
+html.device-laptop .layout.has-right,
+html.device-tablet .layout.has-right,
+html.device-phone .layout.has-right { grid-template-columns: minmax(0, 1fr); }
+html.device-laptop .rightbar,
+html.device-tablet .rightbar,
+html.device-phone .rightbar { position: static; }
+
+/* Планшет и телефон: крупнее кнопки под палец */
+html.device-tablet .btn,
+html.device-phone .btn { min-height: 40px; }
+html.device-tablet .side-link,
+html.device-phone .side-link { min-height: 44px; }
+
+/* Кнопка «Закрыть»: вернуться в игру */
+.ingame-close {
+  position: fixed; right: 14px; bottom: 14px; z-index: 60;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 16px; border: 0; border-radius: 999px; cursor: pointer;
+  font: inherit; font-weight: 700; color: #fff;
+  background: var(--accent-grad, linear-gradient(90deg, #ff8a3d, #ff4d4d, #ff4fa0));
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+}
+.ingame-close .icon { width: 18px; height: 18px; }
+.ingame-close:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.ingame-link p { margin: 10px 0; }

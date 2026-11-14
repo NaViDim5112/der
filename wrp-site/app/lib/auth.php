@@ -217,8 +217,32 @@ function cookie_set($name, $value, $expires)
         'path' => $path,
         'secure' => request_is_https(),
         'httponly' => true,
-        'samesite' => 'Lax',
+        'samesite' => cookie_samesite(),
     ]);
+}
+
+// SameSite для cookie входа. 'None' нужен, только если сайт открывают во встроенном окне (iframe) с другого адреса,
+// и работает только по HTTPS; иначе - 'Lax'.
+function cookie_samesite()
+{
+    $v = ucfirst(strtolower((string)cfg('cookie_samesite', 'Lax')));
+    if ($v === 'None') {
+        return request_is_https() ? 'None' : 'Lax';
+    }
+    return $v === 'Strict' ? 'Strict' : 'Lax';
+}
+
+// Адреса, с которых сайт можно открывать во встроенном окне (config.php: 'frame_ancestors')
+function frame_ancestors()
+{
+    $out = [];
+    foreach ((array)cfg('frame_ancestors', []) as $o) {
+        $o = rtrim(trim((string)$o), '/');
+        if (preg_match('~^https?://[A-Za-z0-9.\-]+(?::\d{1,5})?$~', $o)) {
+            $out[] = $o;
+        }
+    }
+    return $out;
 }
 
 function request_is_https()

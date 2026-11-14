@@ -48,8 +48,14 @@ if (empty($GLOBALS['wrp_config']['installed'])) {
     exit;
 }
 
-// Заголовки безопасности
-header('X-Frame-Options: SAMEORIGIN');
+// Заголовки безопасности. Встраивать сайт в окно (iframe) можно только с адресов из 'frame_ancestors'
+// (например, интерфейс игры), иначе - только с самого сайта.
+$frameFrom = frame_ancestors();
+if ($frameFrom) {
+    header("Content-Security-Policy: frame-ancestors 'self' " . implode(' ', $frameFrom));
+} else {
+    header('X-Frame-Options: SAMEORIGIN');
+}
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 
@@ -60,7 +66,7 @@ session_set_cookie_params([
     'path' => rtrim((string)cfg('base_path', ''), '/') . '/',
     'secure' => request_is_https(),
     'httponly' => true,
-    'samesite' => 'Lax',
+    'samesite' => cookie_samesite(),
 ]);
 ini_set('session.use_strict_mode', '1');
 session_start();
@@ -79,3 +85,6 @@ set_exception_handler(function ($ex) {
 });
 
 auth_boot();
+
+// Начало обработки запроса: сессия и пользователь уже есть, вывода ещё нет (модули могут ставить cookie)
+hook_fire('request_start');

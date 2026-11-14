@@ -148,6 +148,7 @@
 
 | Точка | Вид | Аргументы |
 |---|---|---|
+| `request_start` | fire | - : начало запроса, сессия и пользователь уже есть, вывода ещё нет (можно ставить cookie) |
 | `login_intercept` | first | `$u`, `$remember`, `$return`: вернуть адрес следующего шага (например, код 2FA) или null |
 | `user_logged_in` | fire | `$u` |
 | `conversation_message_actions` | html | `$msg`, `$convId` |
